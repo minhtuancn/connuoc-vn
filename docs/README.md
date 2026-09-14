@@ -8,6 +8,7 @@
 
 ## Architecture
 - [System architecture](ARCHITECTURE.md)
+- [Repository structure & dependency rules](REPOSITORY-STRUCTURE.md)
 - [Data sources & provenance](DATA-SOURCES.md)
 - [Tide engine](TIDE-ENGINE.md)
 - [Drainage engine](DRAINAGE-ENGINE.md)
