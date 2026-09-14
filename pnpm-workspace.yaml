@@ -1,0 +1,7 @@
+packages:
+  - 'apps/web'
+  - 'apps/admin'
+  - 'services/*'
+  - 'packages/*'
+
+# Flutter mobile is intentionally outside the pnpm workspace.

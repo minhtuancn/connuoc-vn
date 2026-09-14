@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  foundation:
+    name: Foundation checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Verify required foundation documents
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            README.md
+            docs/PRD.md
+            docs/ARCHITECTURE.md
+            docs/ROADMAP.md
+            docs/TODO.md
+            docs/DATA-SOURCES.md
+            docs/TIDE-ENGINE.md
+            docs/DRAINAGE-ENGINE.md
+            docs/LUNAR-CALENDAR.md
+            docs/UI-UX.md
+            docs/ACCESSIBILITY.md
+            docs/OFFLINE.md
+            docs/PDF-EXPORT.md
+            docs/SECURITY-PRIVACY.md
+            docs/TESTING.md
+            docs/DEPLOYMENT.md
+          )
+          for file in "${required[@]}"; do
+            test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
+          done
+
+      - name: Reject committed local env files
+        shell: bash
+        run: |
+          set -euo pipefail
+          tracked_envs="$(git ls-files '.env' '.env.*' ':!:*.example' || true)"
+          if [ -n "$tracked_envs" ]; then
+            echo "Tracked environment files are not allowed:"
+            echo "$tracked_envs"
+            exit 1
+          fi
+
+  # Implementation phases should add path-aware jobs for:
+  # - Flutter analyze/test/build smoke
+  # - JS/TS lint/typecheck/test/build
+  # - integration tests with Postgres/PostGIS + Redis
+  # - contract/golden tests
+  # - dependency/security scanning

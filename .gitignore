@@ -1,0 +1,66 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+
+# Node / JS
+node_modules/
+.pnpm-store/
+.next/
+out/
+dist/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+**/ios/Pods/
+**/ios/.symlinks/
+**/macos/Pods/
+
+# IDE / OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.example.json
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs / runtime
+*.log
+logs/
+tmp/
+.cache/
+
+# Local data
+local-data/
+data/private/
+*.sqlite
+*.sqlite3
+
+# Generated exports
+exports/
+*.generated.pdf
+
+# Test / tooling
+playwright-report/
+test-results/
+.nyc_output/
+
+# Mobile signing
+**/android/key.properties
+**/android/*.keystore
+**/android/*.jks
+**/ios/Runner/*.mobileprovision

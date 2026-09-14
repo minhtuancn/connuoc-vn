@@ -1,0 +1,63 @@
+name: Bug report
+description: Report incorrect behavior, data, calculation or UI issue
+title: "[Bug] "
+labels: []
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+  - type: input
+    id: location
+    attributes:
+      label: Station / river / location
+      description: If this is a data/tide/drainage bug.
+  - type: input
+    id: datetime
+    attributes:
+      label: Date/time/timezone
+      description: Include exact date/time when relevant.
+  - type: textarea
+    id: source
+    attributes:
+      label: Source / datum / unit details
+      description: For calculation/data issues include source, water-level unit and datum if known.
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Low - cosmetic/minor
+        - Medium - feature incorrect but workaround exists
+        - High - important data/workflow incorrect
+        - Critical - safety/security/data integrity risk
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: App version, OS/browser, online/offline state.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots / logs / reference evidence
