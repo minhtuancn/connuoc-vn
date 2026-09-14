@@ -1,0 +1,57 @@
+name: Feature request
+description: Propose a product, data, UX, engine or infrastructure feature
+title: "[Feature] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the user problem first. For tide/hydrology/drainage features, include data/source assumptions.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user/problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Mobile
+        - Web
+        - Admin
+        - API
+        - Tide engine
+        - Lunar calendar
+        - Drainage engine
+        - Data / sources
+        - Map / geo
+        - PDF / print
+        - Offline
+        - Accessibility
+        - Infrastructure
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: data
+    attributes:
+      label: Data / source / scientific assumptions
+      description: Include units, timezone, datum, source/license or say N/A.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Concrete, testable outcomes.
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context
