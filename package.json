@@ -1,0 +1,10 @@
+{
+  "name": "connuoc-vn",
+  "private": true,
+  "description": "Con Nuoc Viet monorepo: tide, Vietnamese calendar and drainage decision-support platform",
+  "scripts": {
+    "check:foundation": "node ./scripts/check-foundation.mjs",
+    "test": "echo \"Implementation packages are not bootstrapped yet\"",
+    "lint": "echo \"Implementation packages are not bootstrapped yet\""
+  }
+}
