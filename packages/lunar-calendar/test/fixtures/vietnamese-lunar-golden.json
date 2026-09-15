@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "calendar": "Vietnamese lunar calendar, UTC+07:00",
+  "notes": [
+    "Expected lunar dates are factual reference values, not generated snapshots from this implementation.",
+    "Modern/tricky fixtures use two independent Vietnamese calendar sites where practical.",
+    "Can Chi/solar-term assertions are included only when the cited source states them explicitly."
+  ],
+  "fixtures": [
+    {
+      "id": "tet-1900",
+      "solar": { "year": 1900, "month": 1, "day": 31 },
+      "lunar": { "year": 1900, "month": 1, "day": 1, "isLeapMonth": false },
+      "verifiedFacts": { "dayCanChi": "Giáp Thìn", "solarTerm": "Đại hàn" },
+      "sources": [
+        "https://lichngaytot.com/xem-ngay-tot-xau-31-01-1900"
+      ]
+    },
+    {
+      "id": "tet-1950",
+      "solar": { "year": 1950, "month": 2, "day": 17 },
+      "lunar": { "year": 1950, "month": 1, "day": 1, "isLeapMonth": false },
+      "verifiedFacts": { "dayCanChi": "Quý Mùi", "solarTerm": "Lập xuân" },
+      "sources": [
+        "https://lichngaytot.com/xem-ngay-tot-xau-17-02-1950"
+      ]
+    },
+    {
+      "id": "tet-2000",
+      "solar": { "year": 2000, "month": 2, "day": 5 },
+      "lunar": { "year": 2000, "month": 1, "day": 1, "isLeapMonth": false },
+      "verifiedFacts": { "dayCanChi": "Quý Tị", "solarTerm": "Lập xuân" },
+      "sources": [
+        "https://lichngaytot.com/xem-ngay-tot-xau-05-02-2000"
+      ]
+    },
+    {
+      "id": "tet-2024",
+      "solar": { "year": 2024, "month": 2, "day": 10 },
+      "lunar": { "year": 2024, "month": 1, "day": 1, "isLeapMonth": false },
+      "verifiedFacts": { "dayCanChi": "Giáp Thìn", "solarTerm": "Lập xuân" },
+      "sources": [
+        "https://lichngaytot.com/xem-ngay-tot-xau-10-02-2024-amp",
+        "https://thientue.vn/xem-ngay-10-thang-2-nam-2024.html"
+      ]
+    },
+    {
+      "id": "tet-2025",
+      "solar": { "year": 2025, "month": 1, "day": 29 },
+      "lunar": { "year": 2025, "month": 1, "day": 1, "isLeapMonth": false },
+      "verifiedFacts": { "dayCanChi": "Mậu Tuất", "solarTerm": "Đại hàn" },
+      "sources": [
+        "https://lichngaytot.com/xem-ngay-tot-xau-29-01-2025",
+        "https://thientue.vn/xem-ngay-29-thang-1-nam-2025.html"
+      ]
+    },
+    {
+      "id": "leap-sixth-month-2025",
+      "solar": { "year": 2025, "month": 7, "day": 25 },
+      "lunar": { "year": 2025, "month": 6, "day": 1, "isLeapMonth": true },
+      "verifiedFacts": { "dayCanChi": "Ất Mùi", "solarTerm": "Đại thử" },
+      "sources": [
+        "https://lichngaytot.com/xem-ngay-tot-xau-25-07-2025",
+        "https://thientue.vn/xem-ngay-25-thang-7-nam-2025.html"
+      ]
+    },
+    {
+      "id": "tet-2026",
+      "solar": { "year": 2026, "month": 2, "day": 17 },
+      "lunar": { "year": 2026, "month": 1, "day": 1, "isLeapMonth": false },
+      "verifiedFacts": { "dayCanChi": "Nhâm Tuất", "solarTerm": "Lập xuân" },
+      "sources": [
+        "https://lichngaytot.com/xem-ngay-tot-xau-17-02-2026",
+        "https://lichngaytot.com/chon-ngay-tot/xem-ngay-tot-xau-thang-1-nam-2026-585-231764.html"
+      ]
+    },
+    {
+      "id": "project-reference-2026-09-15",
+      "solar": { "year": 2026, "month": 9, "day": 15 },
+      "lunar": { "year": 2026, "month": 8, "day": 5, "isLeapMonth": false },
+      "verifiedFacts": { "dayCanChi": "Nhâm Thìn", "solarTerm": "Bạch lộ" },
+      "sources": [
+        "https://thientue.vn/hom-nay-ngay-may-am.html",
+        "https://thientue.vn/hom-nay-la-ngay-gi.html"
+      ]
+    }
+  ]
+}
