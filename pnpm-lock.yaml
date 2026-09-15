@@ -252,12 +252,21 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
+      '@connuoc/job-queue':
+        specifier: workspace:*
+        version: link:../../packages/job-queue
+      '@connuoc/tide-worker':
+        specifier: workspace:*
+        version: link:../tide-worker
       '@types/node':
         specifier: 26.5.1
         version: 26.5.1
       '@types/pg':
         specifier: 8.23.1
         version: 8.23.1
+      bullmq:
+        specifier: 6.3.4
+        version: 6.3.4(ioredis@6.0.0)(pg@8.23.0)
 
   services/tide-worker:
     dependencies:
