@@ -235,7 +235,7 @@ export class PgIngestionRepository implements IngestionRepository {
            finished_at = now(),
            accepted_records = $2,
            rejected_records = $3,
-           metadata = jsonb_build_object('stationPublicId', $4)
+           metadata = jsonb_build_object('stationPublicId', $4::text)
          WHERE id = $1`,
         [runRow.id, insertedObservations, rejectedRecords, input.batch.station.publicId],
       );
