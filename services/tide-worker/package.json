@@ -13,6 +13,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "pretest": "pnpm run prepare:deps",
     "test": "vitest run test/*.test.ts --exclude test/*.integration.test.ts",
+    "pretest:integration": "pnpm run prepare:deps",
     "test:integration": "vitest run test/*.integration.test.ts"
   },
   "dependencies": {
