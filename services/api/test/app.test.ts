@@ -35,15 +35,39 @@ describe('@connuoc/api foundation', () => {
     }
   });
 
-  it('generates OpenAPI and returns RFC-style problem details for missing routes', async () => {
+  it('documents all public Phase 2 endpoints in OpenAPI', async () => {
     const app = await createApiApp(testEnvironment);
     await app.init();
 
     try {
       const document = buildOpenApiDocument(app);
-      expect(Object.keys(document.paths).some((path) => path.endsWith('/health'))).toBe(true);
+      const paths = Object.keys(document.paths);
+      for (const expected of [
+        '/health',
+        '/locations/search',
+        '/stations/{id}',
+        '/stations/{id}/tide',
+        '/stations/{id}/water-level',
+        '/calendar',
+      ]) {
+        expect(paths.some((path) => path.endsWith(expected))).toBe(true);
+      }
+    } finally {
+      await app.close();
+    }
+  });
 
+  it('returns RFC-style problem details for invalid public queries and missing routes', async () => {
+    const app = await createApiApp(testEnvironment);
+    await app.init();
+
+    try {
       const fastify = app.getHttpAdapter().getInstance() as FastifyInstance;
+      const invalidDate = await fastify.inject({ method: 'GET', url: '/v1/calendar?date=not-a-date' });
+      expect(invalidDate.statusCode).toBe(400);
+      expect(invalidDate.headers['content-type']).toContain('application/problem+json');
+      expect(invalidDate.json()).toMatchObject({ status: 400, instance: '/v1/calendar?date=not-a-date' });
+
       const missing = await fastify.inject({ method: 'GET', url: '/v1/does-not-exist' });
       expect(missing.statusCode).toBe(404);
       expect(missing.headers['content-type']).toContain('application/problem+json');
