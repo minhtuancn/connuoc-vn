@@ -75,7 +75,7 @@ jobs:
           run_install: false
 
       - name: Install workspace dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Lint core packages
         run: pnpm lint
