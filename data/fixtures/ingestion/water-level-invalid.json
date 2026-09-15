@@ -1,5 +1,5 @@
 {
-  "sourceKey": "fixture-water-level-invalid",
+  "sourceKey": "fixture-water-level",
   "payloadKey": "fixture-water-level-invalid-2026-09-15T00:00:00Z",
   "capturedAt": "2026-09-15T00:05:00Z",
   "station": {
