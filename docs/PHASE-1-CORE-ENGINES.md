@@ -2,6 +2,12 @@
 
 Parent epic: #2
 
+## Status
+
+**Implementation complete on Phase 1 completion PR, pending final merge/issue closure.**
+
+Exit evidence: `docs/PHASE-1-EXIT-REPORT.md`.
+
 ## Objective
 
 Deliver deterministic, offline-capable and independently testable core libraries before production backend/mobile UI work.
@@ -9,42 +15,43 @@ Deliver deterministic, offline-capable and independently testable core libraries
 ## Work lanes
 
 ### Lane A — Tooling and contracts
-1. #3 Bootstrap core package toolchain.
-2. #4 Shared domain schemas and identifiers.
-3. #11 Geo/search utilities can start after #3/#4 contracts are stable enough.
+- [x] #3 Bootstrap core package toolchain + reproducible `pnpm-lock.yaml` + frozen CI install.
+- [x] #4 Shared domain schemas and identifiers.
+- [x] #11 Geo/search utilities.
 
 ### Lane B — Tide
-1. #5 Harmonic constituent model + prediction API.
-2. #6 Extrema + rising/falling + event timestamps.
-3. #7 Reference fixtures + golden tests + benchmark baseline.
+- [x] #5 Harmonic constituent model + prediction API.
+- [x] #6 Extrema + rising/falling + event timestamps.
+- [x] #7 Analytic golden reference + external capability fixture + benchmark baseline.
+
+Scientific note: Phase 1 closes the fixed-frequency model honestly; NOAA/IHO-style astronomy/nodal parity is a separate follow-up #23 and is required before official-station parity claims.
 
 ### Lane C — Vietnamese lunar calendar
-1. #8 Solar/lunar conversion + leap-month rules.
-2. #9 Can Chi + solar terms + moon-phase interface.
-3. #10 Known-date fixtures + golden validation.
+- [x] #8 Solar/lunar conversion + leap-month rules.
+- [x] #9 Can Chi + solar terms + moon-phase interface.
+- [x] #10 Independent factual fixtures + golden validation + cross-range round trips.
 
 ### Lane D — Data governance
-- #12 Source inventory, licensing and fixture provenance.
-- Runs in parallel but must complete before #7/#10 can be considered final.
+- [x] #12 Source inventory, licensing and fixture provenance.
 
 ### Exit gate
-- #13 performs clean-checkout integration verification and closes Phase 1.
+- [x] #13 Clean-checkout integration verification captured in `docs/PHASE-1-EXIT-REPORT.md`.
 
-## Parallelization guidance
+## Parallelization guidance retained for history
 
-After #3 is merged, agents may work on #4, #8 and #12 in parallel. Once the minimum contracts from #4 are stable, #5 and #11 can run independently. Avoid assigning #5 and #6 simultaneously unless the #5 public API has been merged or explicitly frozen.
+The package split proved suitable for isolated agent contexts: shared contracts and tooling stabilized first; Tide, Lunar, Geo and data governance then progressed independently with CI after each PR.
 
 ## Agent context rule
 
-Agents should load only:
+Agents working on these packages should continue loading only:
 - their issue body,
 - the relevant package directory,
 - the matching domain spec under `docs/`,
-- `tsconfig.base.json` / root package config when required,
+- root TypeScript/package configuration when required,
 - fixture directories relevant to their task.
 
-Do not load mobile/web/admin/backend directories for Phase 1 core-engine tasks.
+Do not load mobile/web/admin/backend directories for core-engine-only tasks.
 
 ## Definition of done
 
-A core task is complete only when public API, tests, edge cases, timezone/unit/datum rules and reference provenance are explicit as required by `docs/TODO.md`.
+The Phase 1 exit gate requires public APIs, tests, edge cases, timezone/unit/datum rules, reference provenance, frozen dependency installation and benchmark evidence. All are recorded in `docs/PHASE-1-EXIT-REPORT.md`.

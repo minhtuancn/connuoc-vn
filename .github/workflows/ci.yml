@@ -75,7 +75,7 @@ jobs:
           run_install: false
 
       - name: Install workspace dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Lint core packages
         run: pnpm lint
@@ -88,3 +88,6 @@ jobs:
 
       - name: Build core packages
         run: pnpm build
+
+      - name: Tide benchmark smoke
+        run: pnpm bench

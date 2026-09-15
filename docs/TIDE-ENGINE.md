@@ -21,12 +21,11 @@ model/version metadata
 
 ```text
 UTC time series
-high-tide extrema (Phase 1 issue #6)
-low-tide extrema (Phase 1 issue #6)
-rising/falling/stand state (Phase 1 issue #6)
+high-tide extrema
+low-tide extrema
+rising/falling/stand state
 model metadata
 datum/unit
-quality/confidence metadata (after reference validation)
 ```
 
 ## Design rules
@@ -42,7 +41,7 @@ quality/confidence metadata (after reference validation)
 
 ## Harmonic model v1
 
-The initial deterministic API supports constituent-based prediction using station-specific amplitude, phase and angular speed.
+The Phase 1 deterministic API supports **fixed-frequency constituent reconstruction** using station-specific amplitude, phase and angular speed.
 
 A source adapter must normalize source constituents into one of these explicit conventions:
 
@@ -61,7 +60,18 @@ Where:
 - `gᵢ` is normalized to `[0, 360)`,
 - `Δt` is elapsed mean solar hours from `referenceEpochUtc`.
 
-The engine intentionally does not infer or silently translate a publisher's epoch/phase convention. Source-specific astronomy/nodal adjustments must be represented by a documented model/version or preprocessing layer before being claimed as production-equivalent to official predictions.
+The engine intentionally does not infer or silently translate a publisher's epoch/phase convention.
+
+### Scientific capability boundary
+
+Many NOAA/IHO-style predictors calculate astronomical constituent argument `V0` and time-varying nodal corrections `f/u`. The Phase 1 fixed-frequency core does **not** implement those corrections. Independent review against the MIT `openwatersio/neaps` predictor confirmed that its published NOAA-comparison path includes these astronomy/nodal steps.
+
+Therefore:
+
+- Phase 1 can validate fixed-frequency harmonic reconstruction and extrema/state logic exactly.
+- Raw NOAA/other harmonic constants must not be described as reproduced with official-prediction parity merely by loading amplitude/phase/speed into this v1 formula.
+- The external Neaps reference vectors are pinned in the fixture as a capability target and explicitly marked `not-directly-comparable` to the Phase 1 model.
+- Astronomy/nodal parity is tracked in issue #23 and must pass independent external level/time error metrics before any NOAA-equivalent claim.
 
 ## Sampling semantics
 
@@ -72,19 +82,17 @@ The engine intentionally does not infer or silently translate a publisher's epoc
 
 ## Extrema detection
 
-High/low events must be derived from the generated curve with robust interpolation/refinement rather than simply selecting coarse sample maxima/minima.
+High/low events are derived from the generated curve rather than simply selecting coarse sample maxima/minima.
 
-Tests must cover:
-- semidiurnal patterns,
-- diurnal patterns,
-- mixed tides,
-- small-amplitude/neap periods,
-- day-boundary extrema,
-- timezone/DST assumptions (Vietnam has no current DST, but engine should remain explicit).
+Phase 1 behavior:
+- sharp extrema use local three-point quadratic refinement,
+- flat high/low plateaus collapse to one midpoint event,
+- non-monotonic/invalid series are rejected,
+- event timestamps remain explicit UTC instants.
+
+Tests cover synthetic semidiurnal patterns, refinement, plateaus and state near extrema.
 
 ## Water state
-
-Suggested states:
 
 ```text
 RISING
@@ -94,19 +102,13 @@ NEAR_LOW_STAND
 UNKNOWN
 ```
 
-Thresholds for `stand` must be model/version controlled, not arbitrary UI logic.
+Thresholds for `stand` are explicit `WaterStateConfig`; they are model/caller policy, never hidden UI logic.
 
 ## Confidence
 
 Astronomical tide confidence is different from river water-level confidence.
 
-Tide engine confidence may reflect:
-- constituent completeness,
-- station calibration quality,
-- supported prediction horizon,
-- datum certainty.
-
-It must not imply weather/surge/river effects are modeled unless they actually are.
+Tide confidence may eventually reflect constituent completeness, station calibration quality, prediction horizon and datum certainty. It must never imply weather/surge/river effects are modeled unless they actually are.
 
 ## River use
 
@@ -115,29 +117,28 @@ A tide prediction at an estuary/sea station must not be presented as measured ri
 ## Offline packs
 
 Two supported strategies:
-1. Ship/download harmonic constituents and calculate locally.
+1. Ship/download compatible harmonic model data and calculate locally.
 2. Download precomputed series where licensing/model constraints require it.
 
-Each offline pack must include model/data version.
+Each offline pack must include model/data version and datum metadata.
 
-## Validation
+## Phase 1 validation
 
-Required before release:
-- trusted station fixtures,
-- cross-check multiple dates/seasons,
-- extrema time error metrics,
-- water-level error metrics,
-- regression snapshots,
-- numeric precision tests.
+Validation artifacts are version-controlled and run without network access:
+
+- `packages/tide-engine/test/fixtures/tide-reference.json` — closed-form analytic golden plus pinned Neaps external reference metadata/capability boundary.
+- `packages/tide-engine/test/reference.test.ts` — exact level and high/low event checks plus assertions preventing accidental astronomy/nodal parity claims.
+- Existing prediction/extrema/state unit tests — phase conventions, time ranges, invalid input, refinement and plateaus.
+- `packages/tide-engine/scripts/benchmark.mjs` — deterministic 24h/7d/30d, 10-minute sampling benchmark with repeated-run checksum checks.
+- `docs/benchmarks/TIDE-ENGINE-BASELINE.md` — observed GitHub Actions baseline; not a machine-independent SLA.
 
 ## Public API v1
 
 ```ts
 predictTideLevelAt(model, atUtc): number
 predictTide(request): TidePrediction
-findExtrema(series): TideExtrema[]          // issue #6
-getWaterState(series, at): WaterState       // issue #6
-summarizePrediction(prediction): TideSummary // later consumer helper
+findExtrema(points, options?): TideExtremum[]
+getWaterState(points, atUtc, config): WaterState
 ```
 
-Initial prediction types live in the tide package public boundary. Shared station/source/datum contracts remain in `@connuoc/shared-types`; integration can tighten branded ID typing after package build/reference strategy is stabilized.
+Initial prediction types live in the tide package public boundary. Shared station/source/datum contracts remain in `@connuoc/shared-types`.
