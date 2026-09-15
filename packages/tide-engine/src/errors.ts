@@ -5,7 +5,9 @@ export type TideInputErrorCode =
   | 'INVALID_INTERVAL'
   | 'TOO_MANY_POINTS'
   | 'INVALID_MODEL'
-  | 'INVALID_CONSTITUENT';
+  | 'INVALID_CONSTITUENT'
+  | 'INVALID_SERIES'
+  | 'INVALID_STATE_CONFIG';
 
 export class TideInputError extends Error {
   readonly code: TideInputErrorCode;

@@ -7,27 +7,27 @@ Pure deterministic astronomical tide prediction from station-specific harmonic c
 ```ts
 predictTideLevelAt(model, atUtc): number
 predictTide(request): TidePrediction
+findExtrema(points, options?): TideExtremum[]
+getWaterState(points, atUtc, config): WaterState
 ```
 
-All calculation timestamps are explicit instants and output series timestamps are normalized to UTC. The request also carries an IANA `timeZone` as presentation metadata; the engine does not create ambiguous local-time timestamps.
+All calculation timestamps are explicit instants and output series/event timestamps are normalized to UTC. The request also carries an IANA `timeZone` as presentation metadata; the engine does not create ambiguous local-time timestamps.
 
 ## Harmonic convention
 
 A model must declare its phase convention and reference epoch. The engine does **not** guess how a source table encodes phase.
 
-For `cosine_lag_degrees`:
-
 ```text
-h(t) = Z0 + Σ Aᵢ cos(ωᵢ Δt - gᵢ)
+cosine_lag_degrees:  h(t) = Z0 + Σ Aᵢ cos(ωᵢ Δt - gᵢ)
+cosine_lead_degrees: h(t) = Z0 + Σ Aᵢ cos(ωᵢ Δt + gᵢ)
 ```
 
-For `cosine_lead_degrees`:
+## Extrema/state
 
-```text
-h(t) = Z0 + Σ Aᵢ cos(ωᵢ Δt + gᵢ)
-```
-
-where speeds are degrees per mean solar hour and phases are normalized to `[0, 360)`.
+- Sharp extrema are refined with a local three-point quadratic rather than blindly using the coarse sample timestamp.
+- Flat high/low plateaus collapse to one midpoint event.
+- `getWaterState` distinguishes rising/falling from near-high/near-low stand.
+- Stand slope/window thresholds are explicit `WaterStateConfig`; UI code must not invent its own hidden thresholds.
 
 ## Safety/data rules
 
@@ -39,4 +39,4 @@ where speeds are degrees per mean solar hour and phases are normalized to `[0, 3
 
 ## Validation status
 
-Current unit tests use synthetic constituents with mathematically known results. Production claims require trusted station fixtures and golden validation under issues #7 and #12.
+Current tests use synthetic constituents/curves with mathematically known results. Production claims require trusted station fixtures and golden validation under issues #7 and #12.

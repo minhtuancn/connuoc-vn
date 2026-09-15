@@ -60,3 +60,32 @@ export interface TidePrediction {
   readonly intervalSeconds: number;
   readonly points: readonly TidePredictionPoint[];
 }
+
+export type TideExtremumKind = 'HIGH' | 'LOW';
+export type TideExtremumRefinement = 'quadratic' | 'sample' | 'plateau';
+
+export interface TideExtremum {
+  readonly kind: TideExtremumKind;
+  readonly timestampUtc: string;
+  readonly value: number;
+  readonly refinement: TideExtremumRefinement;
+}
+
+export interface ExtremaOptions {
+  /** Absolute value difference treated as flat. Defaults to 1e-12 in series units. */
+  readonly flatTolerance?: number;
+}
+
+export type WaterState =
+  | 'RISING'
+  | 'FALLING'
+  | 'NEAR_HIGH_STAND'
+  | 'NEAR_LOW_STAND'
+  | 'UNKNOWN';
+
+/** Thresholds belong to a model/version or caller policy, never presentation logic. */
+export interface WaterStateConfig {
+  readonly standSlopeThresholdPerHour: number;
+  readonly extremumWindowSeconds: number;
+  readonly flatTolerance?: number;
+}
