@@ -1,4 +1,4 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import { Module, type DynamicModule } from '@nestjs/common';
 import type { Pool } from 'pg';
 
 import { DatabaseModule, PG_POOL } from '../../database/database.module.js';
