@@ -1,10 +1,24 @@
 {
   "name": "connuoc-vn",
+  "version": "0.0.0",
   "private": true,
   "description": "Con Nuoc Viet monorepo: tide, Vietnamese calendar and drainage decision-support platform",
+  "packageManager": "pnpm@12.4.1",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "check:foundation": "node ./scripts/check-foundation.mjs",
-    "test": "echo \"Implementation packages are not bootstrapped yet\"",
-    "lint": "echo \"Implementation packages are not bootstrapped yet\""
+    "build": "pnpm --filter './packages/**' build",
+    "lint": "eslint 'packages/**/*.ts'",
+    "typecheck": "pnpm --filter './packages/**' typecheck",
+    "test": "pnpm --filter './packages/**' test",
+    "bench": "pnpm --filter @connuoc/tide-engine bench"
+  },
+  "devDependencies": {
+    "eslint": "10.10.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.0",
+    "vitest": "5.0.0"
   }
 }
