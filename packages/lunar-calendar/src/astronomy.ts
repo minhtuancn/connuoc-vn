@@ -1,7 +1,8 @@
 const PI2 = Math.PI * 2;
 const DEG_TO_RAD = Math.PI / 180;
-const SYNODIC_MONTH = 29.530588853;
-const NEW_MOON_EPOCH = 2415021.076998695;
+export const SYNODIC_MONTH_DAYS = 29.530588853;
+export const NEW_MOON_REFERENCE_JD = 2_415_020.75933;
+const NEW_MOON_INDEX_REFERENCE_JD = 2_415_021.076998695;
 
 export function julianDayFromDate(day: number, month: number, year: number): number {
   const a = Math.floor((14 - month) / 12);
@@ -43,7 +44,11 @@ export function dateFromJulianDay(jd: number): { day: number; month: number; yea
   return { day, month, year };
 }
 
-function newMoon(k: number): number {
+export function julianDateFromUnixMilliseconds(timestampMs: number): number {
+  return timestampMs / 86_400_000 + 2_440_587.5;
+}
+
+export function newMoonJulianDate(k: number): number {
   const t = k / 1236.85;
   const t2 = t * t;
   const t3 = t2 * t;
@@ -76,11 +81,11 @@ function newMoon(k: number): number {
 }
 
 export function newMoonDay(k: number, timeZoneHours: number): number {
-  return Math.floor(newMoon(k) + 0.5 + timeZoneHours / 24);
+  return Math.floor(newMoonJulianDate(k) + 0.5 + timeZoneHours / 24);
 }
 
-function sunLongitude(julianDay: number): number {
-  const t = (julianDay - 2_451_545) / 36_525;
+export function sunLongitudeRadians(julianDate: number): number {
+  const t = (julianDate - 2_451_545) / 36_525;
   const t2 = t * t;
   const meanAnomaly = 357.5291 + 35_999.0503 * t - 0.0001559 * t2 - 0.00000048 * t * t2;
   const meanLongitude = 280.46645 + 36_000.76983 * t + 0.0003032 * t2;
@@ -93,22 +98,26 @@ function sunLongitude(julianDay: number): number {
   return longitude;
 }
 
+export function sunLongitudeDegrees(julianDate: number): number {
+  return (sunLongitudeRadians(julianDate) / Math.PI) * 180;
+}
+
 export function sunLongitudeSector(dayNumber: number, timeZoneHours: number): number {
-  return Math.floor((sunLongitude(dayNumber - 0.5 - timeZoneHours / 24) / Math.PI) * 6);
+  return Math.floor((sunLongitudeRadians(dayNumber - 0.5 - timeZoneHours / 24) / Math.PI) * 6);
 }
 
 export function lunarMonth11(year: number, timeZoneHours: number): number {
   const offset = julianDayFromDate(31, 12, year) - 2_415_021;
-  const k = Math.floor(offset / SYNODIC_MONTH);
-  let newMoon = newMoonDay(k, timeZoneHours);
-  if (sunLongitudeSector(newMoon, timeZoneHours) >= 9) {
-    newMoon = newMoonDay(k - 1, timeZoneHours);
+  const k = Math.floor(offset / SYNODIC_MONTH_DAYS);
+  let moon = newMoonDay(k, timeZoneHours);
+  if (sunLongitudeSector(moon, timeZoneHours) >= 9) {
+    moon = newMoonDay(k - 1, timeZoneHours);
   }
-  return newMoon;
+  return moon;
 }
 
 export function leapMonthOffset(month11: number, timeZoneHours: number): number {
-  const k = Math.floor(0.5 + (month11 - NEW_MOON_EPOCH) / SYNODIC_MONTH);
+  const k = Math.floor(0.5 + (month11 - NEW_MOON_INDEX_REFERENCE_JD) / SYNODIC_MONTH_DAYS);
   let last = 0;
   let index = 1;
   let arc = sunLongitudeSector(newMoonDay(k + index, timeZoneHours), timeZoneHours);
@@ -123,9 +132,9 @@ export function leapMonthOffset(month11: number, timeZoneHours: number): number 
 }
 
 export function lunationIndex(dayNumber: number): number {
-  return Math.floor((dayNumber - NEW_MOON_EPOCH) / SYNODIC_MONTH);
+  return Math.floor((dayNumber - NEW_MOON_INDEX_REFERENCE_JD) / SYNODIC_MONTH_DAYS);
 }
 
 export function month11LunationIndex(month11: number): number {
-  return Math.floor(0.5 + (month11 - NEW_MOON_EPOCH) / SYNODIC_MONTH);
+  return Math.floor(0.5 + (month11 - NEW_MOON_INDEX_REFERENCE_JD) / SYNODIC_MONTH_DAYS);
 }
