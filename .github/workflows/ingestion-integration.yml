@@ -1,0 +1,48 @@
+name: Ingestion Integration
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ingestion:
+    name: Fixture ingestion replay/provenance
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:18-3.6
+        env:
+          POSTGRES_USER: connuoc
+          POSTGRES_PASSWORD: connuoc
+          POSTGRES_DB: connuoc
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U connuoc -d connuoc"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://connuoc:connuoc@localhost:5432/connuoc
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+          run_install: false
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Apply database migrations
+        run: pnpm --filter @connuoc/api db:migrate
+      - name: Run fixture ingestion integration tests
+        run: pnpm --filter @connuoc/tide-worker test:integration

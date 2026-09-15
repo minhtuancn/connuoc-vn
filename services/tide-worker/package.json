@@ -1,0 +1,29 @@
+{
+  "name": "@connuoc/tide-worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "prepare:deps": "pnpm --filter @connuoc/job-queue build",
+    "prebuild": "pnpm run prepare:deps",
+    "build": "tsc -p tsconfig.json",
+    "pretypecheck": "pnpm run prepare:deps",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pretest": "pnpm run prepare:deps",
+    "test": "vitest run test/*.test.ts --exclude test/*.integration.test.ts",
+    "pretest:integration": "pnpm run prepare:deps",
+    "test:integration": "vitest run test/*.integration.test.ts"
+  },
+  "dependencies": {
+    "@connuoc/job-queue": "workspace:*",
+    "@connuoc/shared-types": "workspace:*",
+    "pg": "8.23.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "26.5.1",
+    "@types/pg": "8.23.1"
+  }
+}

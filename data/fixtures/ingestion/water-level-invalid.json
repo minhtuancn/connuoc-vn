@@ -1,0 +1,24 @@
+{
+  "sourceKey": "fixture-water-level",
+  "payloadKey": "fixture-water-level-invalid-2026-09-15T00:00:00Z",
+  "capturedAt": "2026-09-15T00:05:00Z",
+  "station": {
+    "publicId": "fixture-invalid-station",
+    "name": "Fixture Invalid Station",
+    "stationType": "water_level",
+    "timeZone": "Asia/Ho_Chi_Minh",
+    "latitude": 20.25,
+    "longitude": 106.08,
+    "defaultDatumId": "local-gauge-fixture"
+  },
+  "observations": [
+    {
+      "sourceRecordKey": "fixture-invalid-observation-001",
+      "observedAt": "not-an-instant",
+      "value": 125.4,
+      "unit": "feet",
+      "datumId": "local-gauge-fixture",
+      "qualityState": "GOOD"
+    }
+  ]
+}
