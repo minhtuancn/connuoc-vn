@@ -1,4 +1,4 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import { Module, type DynamicModule } from '@nestjs/common';
 
 import { HealthController } from './modules/health/health.controller.js';
 import { PublicDataModule } from './modules/public-data/public-data.module.js';
