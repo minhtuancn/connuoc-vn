@@ -55,9 +55,35 @@ jobs:
             exit 1
           fi
 
-  # Implementation phases should add path-aware jobs for:
-  # - Flutter analyze/test/build smoke
-  # - JS/TS lint/typecheck/test/build
-  # - integration tests with Postgres/PostGIS + Redis
-  # - contract/golden tests
-  # - dependency/security scanning
+  core-packages:
+    name: Core package checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+          run_install: false
+
+      - name: Install workspace dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Lint core packages
+        run: pnpm lint
+
+      - name: Typecheck core packages
+        run: pnpm typecheck
+
+      - name: Test core packages
+        run: pnpm test
+
+      - name: Build core packages
+        run: pnpm build
