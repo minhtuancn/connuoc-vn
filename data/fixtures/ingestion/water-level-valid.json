@@ -1,0 +1,32 @@
+{
+  "sourceKey": "fixture-water-level",
+  "payloadKey": "fixture-water-level-2026-09-15T00:00:00Z",
+  "capturedAt": "2026-09-15T00:05:00Z",
+  "station": {
+    "publicId": "fixture-ninh-binh-001",
+    "name": "Fixture Ninh Binh Water Level",
+    "stationType": "water_level",
+    "timeZone": "Asia/Ho_Chi_Minh",
+    "latitude": 20.25,
+    "longitude": 106.08,
+    "defaultDatumId": "local-gauge-fixture"
+  },
+  "observations": [
+    {
+      "sourceRecordKey": "fixture-observation-001",
+      "observedAt": "2026-09-15T00:00:00Z",
+      "value": 125.4,
+      "unit": "cm",
+      "datumId": "local-gauge-fixture",
+      "qualityState": "GOOD"
+    },
+    {
+      "sourceRecordKey": "fixture-observation-002",
+      "observedAt": "2026-09-15T00:10:00Z",
+      "value": 126.1,
+      "unit": "cm",
+      "datumId": "local-gauge-fixture",
+      "qualityState": "GOOD"
+    }
+  ]
+}
