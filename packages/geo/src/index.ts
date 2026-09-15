@@ -1,5 +1,3 @@
-/**
- * Framework-independent geography and Vietnamese search helpers.
- * Phase 1 issue #11 owns the first public implementation.
- */
-export {};
+export * from './distance.js';
+export * from './normalize.js';
+export * from './search.js';
