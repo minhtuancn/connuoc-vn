@@ -9,7 +9,7 @@ export type TideInputErrorCode =
 
 export class TideInputError extends Error {
   readonly code: TideInputErrorCode;
-  readonly field?: string;
+  readonly field: string | undefined;
 
   constructor(code: TideInputErrorCode, message: string, field?: string) {
     super(message);
