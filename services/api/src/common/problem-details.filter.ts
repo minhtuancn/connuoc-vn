@@ -1,8 +1,8 @@
 import {
-  ArgumentsHost,
   Catch,
   HttpException,
   HttpStatus,
+  type ArgumentsHost,
   type ExceptionFilter,
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
