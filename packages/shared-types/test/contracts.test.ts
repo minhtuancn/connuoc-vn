@@ -82,8 +82,16 @@ describe('shared domain contracts', () => {
     } as const;
 
     expect(WaterLevelObservationSchema.safeParse(observation).success).toBe(true);
-    const { datumId: _datumId, ...withoutDatum } = observation;
-    expect(WaterLevelObservationSchema.safeParse(withoutDatum).success).toBe(false);
+    expect(
+      WaterLevelObservationSchema.safeParse({
+        stationId: observation.stationId,
+        observedAt: observation.observedAt,
+        value: observation.value,
+        unit: observation.unit,
+        sourceId: observation.sourceId,
+        origin: observation.origin,
+      }).success,
+    ).toBe(false);
   });
 
   it('validates forecast time ranges and explicit prediction metadata', () => {
