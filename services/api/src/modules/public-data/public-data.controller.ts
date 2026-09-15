@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Controller,
   Get,
+  Inject,
   NotFoundException,
   Param,
   Query,
@@ -130,7 +131,7 @@ function setCache(reply: FastifyReply, value: string): void {
 @ApiTags('public-data')
 @Controller()
 export class PublicDataController {
-  constructor(private readonly service: PublicDataService) {}
+  constructor(@Inject(PublicDataService) private readonly service: PublicDataService) {}
 
   @Get('locations/search')
   @ApiOperation({ summary: 'Search public stations and aliases' })
