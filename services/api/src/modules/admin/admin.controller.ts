@@ -5,6 +5,7 @@ import {
   Body,
   Controller,
   Get,
+  Inject,
   NotFoundException,
   Param,
   Patch,
@@ -128,7 +129,7 @@ function mutationContext(
 @Controller('admin')
 @UseGuards(AdminAuthGuard, AdminCapabilityGuard)
 export class AdminController {
-  constructor(private readonly repository: PgAdminRepository) {}
+  constructor(@Inject(PgAdminRepository) private readonly repository: PgAdminRepository) {}
 
   @Get('sources')
   @RequireAdminCapabilities('admin:read')
