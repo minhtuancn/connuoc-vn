@@ -15,7 +15,10 @@ export async function createApiApp(
   const adapter = new FastifyAdapter({
     logger: environment.NODE_ENV === 'test' ? false : { level: environment.LOG_LEVEL },
   });
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter, {
+  const rootModule = AppModule.register({
+    allowMissingDatabase: environment.NODE_ENV === 'test',
+  });
+  const app = await NestFactory.create<NestFastifyApplication>(rootModule, adapter, {
     bufferLogs: true,
   });
 
