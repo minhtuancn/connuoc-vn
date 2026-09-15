@@ -88,3 +88,6 @@ jobs:
 
       - name: Build core packages
         run: pnpm build
+
+      - name: Tide benchmark smoke
+        run: pnpm bench
