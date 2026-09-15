@@ -1,0 +1,19 @@
+services:
+  postgis:
+    image: postgis/postgis:18-3.6
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-connuoc}
+      POSTGRES_USER: ${POSTGRES_USER:-connuoc}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-connuoc-local-only}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-connuoc} -d ${POSTGRES_DB:-connuoc}']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - connuoc-postgis:/var/lib/postgresql
+
+volumes:
+  connuoc-postgis:
