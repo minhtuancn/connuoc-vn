@@ -6,6 +6,15 @@ export function buildOpenApiDocument(app: NestFastifyApplication): OpenAPIObject
     .setTitle('Con Nước Việt API')
     .setDescription('Public and administrative API for tide, water-level, calendar and provenance data.')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'opaque high-entropy token',
+        description: 'Administrative bearer token. Raw tokens are never stored by the service.',
+      },
+      'admin-bearer',
+    )
     .build();
 
   return SwaggerModule.createDocument(app, config);

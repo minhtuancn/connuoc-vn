@@ -27,6 +27,8 @@ try {
     'audit_log',
     'tide_models',
     'tide_constituents',
+    'admin_principals',
+    'admin_api_tokens',
   ];
   const tables = await client.query(
     `SELECT table_name FROM information_schema.tables
@@ -99,6 +101,28 @@ try {
       throw new Error('Harmonic tide model constituents were not persisted deterministically.');
     }
 
+    const principal = await client.query(
+      `INSERT INTO admin_principals (actor_id, display_name, role)
+       VALUES ('ci-operator', 'CI Operator', 'data-operator') RETURNING id`,
+    );
+    const principalId = principal.rows[0].id;
+    const tokenHash = 'c'.repeat(64);
+    await client.query(
+      `INSERT INTO admin_api_tokens (principal_id, token_hash_sha256, label)
+       VALUES ($1, $2, 'ci-runtime-only')`,
+      [principalId, tokenHash],
+    );
+    const tokenLookup = await client.query(
+      `SELECT p.actor_id, p.role
+       FROM admin_api_tokens t
+       JOIN admin_principals p ON p.id = t.principal_id
+       WHERE t.token_hash_sha256 = $1 AND t.is_active AND p.is_active`,
+      [tokenHash],
+    );
+    if (tokenLookup.rows[0]?.actor_id !== 'ci-operator' || tokenLookup.rows[0]?.role !== 'data-operator') {
+      throw new Error('Admin token hash did not resolve to the expected active principal.');
+    }
+
     const checksum = 'a'.repeat(64);
     await client.query(
       `INSERT INTO raw_payloads
@@ -138,6 +162,7 @@ try {
       'empty-db-migration',
       'spatial-query',
       'harmonic-tide-model-schema',
+      'admin-token-hash-schema',
       'raw-payload-idempotency-constraint',
     ],
   }));

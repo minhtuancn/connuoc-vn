@@ -12,9 +12,9 @@
     "pretypecheck": "pnpm run prepare:deps",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "pretest": "pnpm run prepare:deps",
-    "test": "vitest run --exclude test/*.integration.test.ts",
+    "test": "vitest run --exclude 'test/*.integration.test.ts'",
     "pretest:integration": "pnpm run prepare:deps",
-    "test:integration": "vitest run test/*.integration.test.ts",
+    "test:integration": "vitest run test/*.integration.test.ts --maxWorkers=1",
     "db:migrate": "node ./scripts/migrate.mjs",
     "db:smoke": "node ./scripts/db-smoke.mjs"
   },

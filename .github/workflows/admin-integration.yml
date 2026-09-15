@@ -1,0 +1,52 @@
+name: Admin Integration
+
+on:
+  pull_request:
+    paths:
+      - 'services/api/**'
+      - 'infrastructure/database/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/admin-integration.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  admin:
+    name: Auth/RBAC/audit
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:18-3.6
+        env:
+          POSTGRES_USER: connuoc
+          POSTGRES_PASSWORD: connuoc
+          POSTGRES_DB: connuoc
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U connuoc -d connuoc"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://connuoc:connuoc@localhost:5432/connuoc
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+          run_install: false
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Apply database migrations
+        run: pnpm --filter @connuoc/api db:migrate
+      - name: Verify admin identity schema
+        run: pnpm --filter @connuoc/api db:smoke
+      - name: Run API integration suites serially
+        run: pnpm --filter @connuoc/api test:integration
