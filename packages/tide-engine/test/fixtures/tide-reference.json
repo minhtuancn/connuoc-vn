@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "engineCapability": {
+    "name": "fixed-frequency harmonic reconstruction",
+    "supported": [
+      "explicit reference epoch",
+      "explicit cosine lag/lead phase convention",
+      "fixed angular speed constituents",
+      "constant mean level",
+      "sampled timeline",
+      "refined extrema"
+    ],
+    "notSupported": [
+      "astronomical argument V0 derived from Doodson/IHO coefficients",
+      "nodal amplitude factor f",
+      "nodal phase correction u",
+      "weather/surge/river hydrodynamics"
+    ]
+  },
+  "analyticGolden": {
+    "description": "Closed-form synthetic reference: h(t)=2+cos(30°×hours), independently checkable from elementary trigonometry.",
+    "model": {
+      "modelId": "analytic-s2-like",
+      "modelVersion": "golden-1",
+      "stationId": "station:analytic-golden",
+      "datumId": "datum:analytic-zero",
+      "unit": "m",
+      "meanLevel": 2,
+      "referenceEpochUtc": "2026-01-01T00:00:00Z",
+      "phaseConvention": "cosine_lag_degrees",
+      "constituents": [
+        { "name": "S2-ANALYTIC", "amplitude": 1, "phaseDegrees": 0, "speedDegreesPerHour": 30 }
+      ]
+    },
+    "levels": [
+      { "atUtc": "2026-01-01T00:00:00Z", "expected": 3 },
+      { "atUtc": "2026-01-01T03:00:00Z", "expected": 2 },
+      { "atUtc": "2026-01-01T06:00:00Z", "expected": 1 },
+      { "atUtc": "2026-01-01T09:00:00Z", "expected": 2 },
+      { "atUtc": "2026-01-01T12:00:00Z", "expected": 3 }
+    ],
+    "events24h": [
+      { "kind": "LOW", "timestampUtc": "2026-01-01T06:00:00.000Z", "expected": 1 },
+      { "kind": "HIGH", "timestampUtc": "2026-01-01T12:00:00.000Z", "expected": 3 },
+      { "kind": "LOW", "timestampUtc": "2026-01-01T18:00:00.000Z", "expected": 1 }
+    ]
+  },
+  "externalReference": {
+    "project": "openwatersio/neaps",
+    "repository": "https://github.com/openwatersio/neaps",
+    "commit": "ffece5ceabddf6c3d940ea43a1eda262fd2eb110",
+    "license": "MIT",
+    "predictorReadme": "https://github.com/openwatersio/neaps/blob/ffece5ceabddf6c3d940ea43a1eda262fd2eb110/packages/tide-predictor/README.md",
+    "referenceTest": "https://github.com/openwatersio/neaps/blob/ffece5ceabddf6c3d940ea43a1eda262fd2eb110/packages/tide-predictor/test/index.test.ts",
+    "publishedVectors": {
+      "startUtc": "2019-09-01T00:00:00Z",
+      "endUtc": "2019-09-01T06:00:00Z",
+      "firstTimelineLevel": -1.46903456,
+      "lastTimelineLevel": 2.83490872,
+      "firstExtremeLevel": -1.67283933
+    },
+    "compatibility": "not-directly-comparable",
+    "reason": "Neaps computes astronomical constituent arguments and nodal f/u corrections. The Phase 1 Con Nước Việt core intentionally implements fixed-frequency reconstruction around an explicit reference epoch only. These published vectors are retained as an external capability target, not silently accepted with a loose tolerance."
+  }
+}
