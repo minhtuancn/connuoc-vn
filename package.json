@@ -9,10 +9,10 @@
   },
   "scripts": {
     "check:foundation": "node ./scripts/check-foundation.mjs",
-    "build": "pnpm --filter './packages/**' build",
-    "lint": "eslint 'packages/**/*.ts'",
-    "typecheck": "pnpm --filter './packages/**' typecheck",
-    "test": "pnpm --filter './packages/**' test",
+    "build": "pnpm --filter './packages/**' --filter './services/**' build",
+    "lint": "eslint 'packages/**/*.ts' 'services/**/*.ts'",
+    "typecheck": "pnpm --filter './packages/**' --filter './services/**' typecheck",
+    "test": "pnpm --filter './packages/**' --filter './services/**' test",
     "bench": "pnpm --filter @connuoc/tide-engine bench"
   },
   "devDependencies": {

@@ -5,3 +5,10 @@ packages:
   - 'packages/*'
 
 # Flutter mobile is intentionally outside the pnpm workspace.
+
+# pnpm 11+ uses allowBuilds in the workspace manifest as the reviewed
+# dependency lifecycle-script policy. Scarf telemetry install scripts are
+# intentionally disabled; no transitive package is granted build permission
+# merely to make CI pass.
+allowBuilds:
+  '@scarf/scarf': false
