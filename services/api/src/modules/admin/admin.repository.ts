@@ -23,18 +23,18 @@ export interface AdminMutationContext {
 }
 
 export interface SourcePatch {
-  readonly name?: string;
-  readonly isActive?: boolean;
-  readonly metadata?: Readonly<Record<string, unknown>>;
+  readonly name?: string | undefined;
+  readonly isActive?: boolean | undefined;
+  readonly metadata?: Readonly<Record<string, unknown>> | undefined;
 }
 
 export interface StationPatch {
-  readonly name?: string;
-  readonly timeZone?: string;
-  readonly defaultDatumId?: string;
-  readonly metadata?: Readonly<Record<string, unknown>>;
-  readonly latitude?: number;
-  readonly longitude?: number;
+  readonly name?: string | undefined;
+  readonly timeZone?: string | undefined;
+  readonly defaultDatumId?: string | undefined;
+  readonly metadata?: Readonly<Record<string, unknown>> | undefined;
+  readonly latitude?: number | undefined;
+  readonly longitude?: number | undefined;
 }
 
 export interface ImportAnnotationPatch {
