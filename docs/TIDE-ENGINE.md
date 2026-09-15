@@ -8,10 +8,10 @@
 
 ```text
 stationId
-coordinates
-timezone
-datum
+coordinates/timezone metadata
+datum + unit
 harmonic constituents
+reference epoch + phase convention
 prediction range
 sampling interval
 model/version metadata
@@ -20,30 +20,55 @@ model/version metadata
 ## Outputs
 
 ```text
-time series
-high-tide extrema
-low-tide extrema
-rising/falling/stand state
+UTC time series
+high-tide extrema (Phase 1 issue #6)
+low-tide extrema (Phase 1 issue #6)
+rising/falling/stand state (Phase 1 issue #6)
 model metadata
 datum/unit
-quality/confidence metadata
+quality/confidence metadata (after reference validation)
 ```
 
 ## Design rules
 
 - Pure functions where practical.
-- UTC internally; convert only at boundaries.
+- UTC internally; local timezone is explicit boundary metadata, never guessed.
 - No hidden network access.
 - Explicit units.
 - Explicit datum.
+- Explicit phase convention and reference epoch.
 - Reproducible output from same inputs/version.
 - Numerical tolerance documented in tests.
 
-## Harmonic model
+## Harmonic model v1
 
-Engine should support constituent-based prediction using station-specific amplitude and phase parameters. Implementation details must be validated against trusted reference fixtures before production use.
+The initial deterministic API supports constituent-based prediction using station-specific amplitude, phase and angular speed.
 
-Do not hardcode a single regional phase convention without documenting the epoch/time standard used by source constituents.
+A source adapter must normalize source constituents into one of these explicit conventions:
+
+```text
+cosine_lag_degrees:
+h(t) = Z0 + Σ Aᵢ cos(ωᵢ Δt - gᵢ)
+
+cosine_lead_degrees:
+h(t) = Z0 + Σ Aᵢ cos(ωᵢ Δt + gᵢ)
+```
+
+Where:
+- `Z0` is the datum-relative mean/offset in the model unit,
+- `Aᵢ` is non-negative amplitude,
+- `ωᵢ` is degrees per mean solar hour,
+- `gᵢ` is normalized to `[0, 360)`,
+- `Δt` is elapsed mean solar hours from `referenceEpochUtc`.
+
+The engine intentionally does not infer or silently translate a publisher's epoch/phase convention. Source-specific astronomy/nodal adjustments must be represented by a documented model/version or preprocessing layer before being claimed as production-equivalent to official predictions.
+
+## Sampling semantics
+
+- `startUtc` and `endUtc` are explicit ISO instants.
+- Samples begin at `startUtc` and continue at `intervalSeconds` while timestamp `<= endUtc`.
+- Output timestamps are canonical UTC ISO strings.
+- Prediction requests are capped to prevent accidental unbounded memory use.
 
 ## Extrema detection
 
@@ -90,7 +115,7 @@ A tide prediction at an estuary/sea station must not be presented as measured ri
 ## Offline packs
 
 Two supported strategies:
-1. Ship/ download harmonic constituents and calculate locally.
+1. Ship/download harmonic constituents and calculate locally.
 2. Download precomputed series where licensing/model constraints require it.
 
 Each offline pack must include model/data version.
@@ -105,13 +130,14 @@ Required before release:
 - regression snapshots,
 - numeric precision tests.
 
-## Public API sketch
+## Public API v1
 
 ```ts
-predictTide(input): TidePrediction
-findExtrema(series): TideExtrema[]
-getWaterState(series, at): WaterState
-summarizePrediction(prediction): TideSummary
+predictTideLevelAt(model, atUtc): number
+predictTide(request): TidePrediction
+findExtrema(series): TideExtrema[]          // issue #6
+getWaterState(series, at): WaterState       // issue #6
+summarizePrediction(prediction): TideSummary // later consumer helper
 ```
 
-Final types belong in `packages/shared-types` or the tide package public boundary after ADR review.
+Initial prediction types live in the tide package public boundary. Shared station/source/datum contracts remain in `@connuoc/shared-types`; integration can tighten branded ID typing after package build/reference strategy is stabilized.
