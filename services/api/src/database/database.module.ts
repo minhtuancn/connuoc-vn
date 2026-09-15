@@ -1,4 +1,4 @@
-import { DynamicModule, Inject, Injectable, Module, type OnModuleDestroy } from '@nestjs/common';
+import { Inject, Injectable, Module, type DynamicModule, type OnModuleDestroy } from '@nestjs/common';
 import type { Pool } from 'pg';
 
 import { parseDatabaseEnvironment } from './config.js';
