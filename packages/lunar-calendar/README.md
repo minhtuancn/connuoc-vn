@@ -16,7 +16,7 @@ The Vietnamese lunar calculation uses the conventional UTC+07 astronomical bound
 
 ## Supported range
 
-Phase 1 solar/lunar conversion explicitly supports years **1900–2100**. Inputs outside that range fail instead of silently producing unvalidated output.
+Phase 1 solar/lunar conversion explicitly supports years **1900–2100**. Inputs outside that range fail instead of silently producing unvalidated output. Gregorian dates near the beginning of 1900 may legitimately map to lunar year 1899; reverse conversion of such an out-of-range lunar year is intentionally rejected.
 
 ## Can Chi
 
@@ -30,6 +30,8 @@ Tháng Đinh Dậu
 Ngày Nhâm Thìn
 ```
 
+The project canonical spelling for the Snake earthly branch is `Tỵ`; some Vietnamese references print the orthographic variant `Tị`. This is a spelling convention, not a different branch.
+
 Cultural interpretation such as ngày tốt/xấu, hoàng đạo/hắc đạo, sao/trực is intentionally **out of scope** for this scientific/calendar core.
 
 ## Solar terms
@@ -42,4 +44,9 @@ Cultural interpretation such as ngày tốt/xấu, hoàng đạo/hắc đạo, s
 
 ## Validation
 
-Current regression cases cover Tết dates, the 2025 leap-sixth month, 15/09/2026 Can Chi/Bạch lộ, and September 2026 lunar phases. The larger cross-decade independent fixture/provenance suite remains issue #10/#12.
+Phase 1 has two deliberately separate validation layers:
+
+- **Factual golden fixtures**: independently published Vietnamese calendar facts stored in `test/fixtures/vietnamese-lunar-golden.json`. They cover Tết 1900, 1950, 2000, 2024, 2025, 2026, the 2025 leap-sixth-month boundary, and 15/09/2026. The fixture records exact reference URLs and selected independently published Can Chi/solar-term facts.
+- **Generated round-trip coverage**: representative solar dates across the supported range are converted solar → lunar → solar. This catches internal consistency regressions but is never described as independent golden truth.
+
+Golden tests run offline in CI; no web lookup occurs during package calculation or testing.
