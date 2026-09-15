@@ -25,6 +25,8 @@ try {
     'forecast_points',
     'quality_flags',
     'audit_log',
+    'tide_models',
+    'tide_constituents',
   ];
   const tables = await client.query(
     `SELECT table_name FROM information_schema.tables
@@ -70,6 +72,33 @@ try {
       throw new Error('PostGIS spatial proximity query did not return the fixture station.');
     }
 
+    const tideModel = await client.query(
+      `INSERT INTO tide_models (
+         station_id, source_id, model_id, model_version, datum_id, unit,
+         mean_level, reference_epoch, phase_convention
+       )
+       VALUES ($1, $2, 'ci-harmonic', '1.0.0', 'ci-datum', 'm', 0.5,
+         '2026-01-01T00:00:00Z', 'cosine_lag_degrees')
+       RETURNING id`,
+      [stationId, sourceId],
+    );
+    const tideModelId = tideModel.rows[0].id;
+    await client.query(
+      `INSERT INTO tide_constituents (
+         tide_model_id, name, amplitude, phase_degrees, speed_degrees_per_hour, ordinal
+       ) VALUES
+         ($1, 'M2', 0.8, 20, 28.9841042, 0),
+         ($1, 'S2', 0.2, 45, 30.0, 1)`,
+      [tideModelId],
+    );
+    const constituentCount = await client.query(
+      `SELECT count(*)::int AS count FROM tide_constituents WHERE tide_model_id = $1`,
+      [tideModelId],
+    );
+    if (constituentCount.rows[0]?.count !== 2) {
+      throw new Error('Harmonic tide model constituents were not persisted deterministically.');
+    }
+
     const checksum = 'a'.repeat(64);
     await client.query(
       `INSERT INTO raw_payloads
@@ -105,7 +134,12 @@ try {
     status: 'ok',
     postgisVersion: postgis.rows[0].version,
     checkedTables: expectedTables.length,
-    checks: ['empty-db-migration', 'spatial-query', 'raw-payload-idempotency-constraint'],
+    checks: [
+      'empty-db-migration',
+      'spatial-query',
+      'harmonic-tide-model-schema',
+      'raw-payload-idempotency-constraint',
+    ],
   }));
 } finally {
   await client.end();
