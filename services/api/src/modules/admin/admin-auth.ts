@@ -2,22 +2,22 @@ import { createHash } from 'node:crypto';
 
 import type { AdminActor, AdminCapability, AdminRole } from './admin.types.js';
 
-const ROLE_CAPABILITIES: Readonly<Record<AdminRole, readonly AdminCapability[]>> = Object.freeze({
-  viewer: Object.freeze(['admin:read']),
-  'data-operator': Object.freeze([
+const ROLE_CAPABILITIES = {
+  viewer: ['admin:read'],
+  'data-operator': [
     'admin:read',
     'sources:write',
     'stations:write',
     'imports:annotate',
-  ]),
-  administrator: Object.freeze([
+  ],
+  administrator: [
     'admin:read',
     'sources:write',
     'stations:write',
     'imports:annotate',
     'admin:manage',
-  ]),
-});
+  ],
+} as const satisfies Readonly<Record<AdminRole, readonly AdminCapability[]>>;
 
 export function capabilitiesForRole(role: AdminRole): readonly AdminCapability[] {
   return ROLE_CAPABILITIES[role];
