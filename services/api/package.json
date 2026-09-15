@@ -8,7 +8,9 @@
     "build": "tsc -p tsconfig.json",
     "start": "node ./dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:migrate": "node ./scripts/migrate.mjs",
+    "db:smoke": "node ./scripts/db-smoke.mjs"
   },
   "dependencies": {
     "@connuoc/shared-types": "workspace:*",
@@ -18,11 +20,13 @@
     "@nestjs/platform-fastify": "12.0.1",
     "@nestjs/swagger": "12.0.1",
     "fastify": "5.12.4",
+    "pg": "8.23.0",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2",
     "zod": "4.6.5"
   },
   "devDependencies": {
-    "@types/node": "26.5.1"
+    "@types/node": "26.5.1",
+    "@types/pg": "8.23.1"
   }
 }
