@@ -12,8 +12,12 @@
     }
   },
   "scripts": {
+    "prepare:deps": "pnpm --filter @connuoc/shared-types build",
+    "prebuild": "pnpm run prepare:deps",
     "build": "tsc -p tsconfig.json",
+    "pretypecheck": "pnpm run prepare:deps",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pretest": "pnpm run prepare:deps",
     "test": "vitest run"
   },
   "dependencies": {
