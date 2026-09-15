@@ -1,0 +1,80 @@
+name: Phase 2 Backend Exit Gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend-data-platform:
+    name: Queue to API provenance and admin audit
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:18-3.6
+        env:
+          POSTGRES_USER: connuoc
+          POSTGRES_PASSWORD: connuoc
+          POSTGRES_DB: connuoc
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U connuoc -d connuoc"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+      redis:
+        image: redis:8.10.1-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgresql://connuoc:connuoc@localhost:5432/connuoc
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+      PHASE2_EVIDENCE_PATH: ${{ runner.temp }}/phase2-exit-evidence.json
+    steps:
+      - name: Checkout clean repository state
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+          run_install: false
+
+      - name: Install workspace dependencies from lockfile
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply migrations to empty PostGIS database
+        run: pnpm --filter @connuoc/api db:migrate
+
+      - name: Verify database schema and constraints
+        run: pnpm --filter @connuoc/api db:smoke
+
+      - name: Run queue-to-API Phase 2 exit test
+        run: pnpm --filter @connuoc/api test:phase2-exit
+
+      - name: Upload Phase 2 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2-backend-exit-evidence
+          path: ${{ runner.temp }}/phase2-exit-evidence.json
+          if-no-files-found: warn
+          retention-days: 30
