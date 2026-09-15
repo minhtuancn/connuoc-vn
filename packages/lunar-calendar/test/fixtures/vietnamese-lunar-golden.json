@@ -4,7 +4,8 @@
   "notes": [
     "Expected lunar dates are factual reference values, not generated snapshots from this implementation.",
     "Modern/tricky fixtures use two independent Vietnamese calendar sites where practical.",
-    "Can Chi/solar-term assertions are included only when the cited source states them explicitly."
+    "Can Chi/solar-term assertions are included only when the cited source states them explicitly.",
+    "Earthly branch Tỵ is the project canonical spelling; Vietnamese references may print the orthographic variant Tị for the same branch."
   ],
   "fixtures": [
     {
@@ -12,27 +13,21 @@
       "solar": { "year": 1900, "month": 1, "day": 31 },
       "lunar": { "year": 1900, "month": 1, "day": 1, "isLeapMonth": false },
       "verifiedFacts": { "dayCanChi": "Giáp Thìn", "solarTerm": "Đại hàn" },
-      "sources": [
-        "https://lichngaytot.com/xem-ngay-tot-xau-31-01-1900"
-      ]
+      "sources": ["https://lichngaytot.com/xem-ngay-tot-xau-31-01-1900"]
     },
     {
       "id": "tet-1950",
       "solar": { "year": 1950, "month": 2, "day": 17 },
       "lunar": { "year": 1950, "month": 1, "day": 1, "isLeapMonth": false },
       "verifiedFacts": { "dayCanChi": "Quý Mùi", "solarTerm": "Lập xuân" },
-      "sources": [
-        "https://lichngaytot.com/xem-ngay-tot-xau-17-02-1950"
-      ]
+      "sources": ["https://lichngaytot.com/xem-ngay-tot-xau-17-02-1950"]
     },
     {
       "id": "tet-2000",
       "solar": { "year": 2000, "month": 2, "day": 5 },
       "lunar": { "year": 2000, "month": 1, "day": 1, "isLeapMonth": false },
-      "verifiedFacts": { "dayCanChi": "Quý Tị", "solarTerm": "Lập xuân" },
-      "sources": [
-        "https://lichngaytot.com/xem-ngay-tot-xau-05-02-2000"
-      ]
+      "verifiedFacts": { "dayCanChi": "Quý Tỵ", "solarTerm": "Lập xuân" },
+      "sources": ["https://lichngaytot.com/xem-ngay-tot-xau-05-02-2000"]
     },
     {
       "id": "tet-2024",
