@@ -1,0 +1,12 @@
+# Flutter/Dart generated state local to this app
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Generated localization output is recreated by `flutter gen-l10n`.
+lib/l10n/app_localizations.dart
+lib/l10n/app_localizations_en.dart
+lib/l10n/app_localizations_vi.dart
