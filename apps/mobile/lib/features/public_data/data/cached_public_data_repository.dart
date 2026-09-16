@@ -30,7 +30,7 @@ class CachedPublicDataRepository implements PublicDataRepository {
   final PublicDataCacheStore _cacheStore;
   final SyncStateStore _syncStateStore;
   final DateTime Function() _nowUtc;
-  final Map<String, Future<void>> _inFlightRefreshes = {};
+  final Map<String, Future<Object?>> _inFlightRefreshes = {};
 
   @override
   Future<RemoteResource<LocationSearchPage>> searchLocations(
@@ -137,7 +137,7 @@ class CachedPublicDataRepository implements PublicDataRepository {
     }
 
     try {
-      return await _refreshAndStore<T>(
+      return await _deduplicatedRefresh<T>(
         resourceKey: resourceKey,
         resourceKind: resourceKind,
         loadRemote: loadRemote,
@@ -157,42 +157,59 @@ class CachedPublicDataRepository implements PublicDataRepository {
     required Future<RemoteResource<T>> Function() loadRemote,
     required Future<void> Function(RemoteResource<T>) saveCached,
   }) {
-    if (_inFlightRefreshes.containsKey(resourceKey)) {
-      return;
-    }
-
-    final task = _runBackgroundRefresh<T>(
+    final refresh = _deduplicatedRefresh<T>(
       resourceKey: resourceKey,
       resourceKind: resourceKind,
       loadRemote: loadRemote,
       saveCached: saveCached,
     );
-    _inFlightRefreshes[resourceKey] = task;
-    unawaited(
-      task.whenComplete(() {
-        if (identical(_inFlightRefreshes[resourceKey], task)) {
-          _inFlightRefreshes.remove(resourceKey);
-        }
-      }),
-    );
+    unawaited(_ignoreBackgroundFailure(refresh));
   }
 
-  Future<void> _runBackgroundRefresh<T>({
+  Future<RemoteResource<T>> _deduplicatedRefresh<T>({
     required String resourceKey,
     required String resourceKind,
     required Future<RemoteResource<T>> Function() loadRemote,
     required Future<void> Function(RemoteResource<T>) saveCached,
-  }) async {
+  }) {
+    final existing = _inFlightRefreshes[resourceKey];
+    if (existing != null) {
+      return existing.then((value) => value as RemoteResource<T>);
+    }
+
+    final refresh = _refreshAndStore<T>(
+      resourceKey: resourceKey,
+      resourceKind: resourceKind,
+      loadRemote: loadRemote,
+      saveCached: saveCached,
+    );
+    _inFlightRefreshes[resourceKey] = refresh;
+    unawaited(_removeInFlightWhenComplete(resourceKey, refresh));
+    return refresh;
+  }
+
+  Future<void> _ignoreBackgroundFailure(Future<Object?> refresh) async {
     try {
-      await _refreshAndStore<T>(
-        resourceKey: resourceKey,
-        resourceKind: resourceKind,
-        loadRemote: loadRemote,
-        saveCached: saveCached,
-      );
+      await refresh;
     } catch (_) {
       // A stale read already returned last-known-good data. The failure is
       // recorded in SyncStateStore and must not surface as an unhandled error.
+    }
+  }
+
+  Future<void> _removeInFlightWhenComplete(
+    String resourceKey,
+    Future<Object?> refresh,
+  ) async {
+    try {
+      await refresh;
+    } catch (_) {
+      // The caller observes the original failure. This observer only owns
+      // deterministic in-flight cleanup.
+    } finally {
+      if (identical(_inFlightRefreshes[resourceKey], refresh)) {
+        _inFlightRefreshes.remove(resourceKey);
+      }
     }
   }
 
