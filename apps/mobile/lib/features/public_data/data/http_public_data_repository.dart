@@ -139,7 +139,9 @@ class HttpPublicDataRepository implements PublicDataRepository {
   }) {
     return _config.apiBaseUrl.replace(
       pathSegments: [
-        ..._config.apiBaseUrl.pathSegments.where((segment) => segment.isNotEmpty),
+        ..._config.apiBaseUrl.pathSegments.where(
+          (segment) => segment.isNotEmpty,
+        ),
         'v1',
         ...pathSegments,
       ],
@@ -247,12 +249,15 @@ class HttpPublicDataRepository implements PublicDataRepository {
 
   ProblemDetails? _tryParseProblem(http.Response response) {
     final contentType = response.headers['content-type']?.toLowerCase();
-    if (contentType == null || !contentType.contains('application/problem+json')) {
+    if (contentType == null ||
+        !contentType.contains('application/problem+json')) {
       return null;
     }
 
     try {
-      return ProblemDetails.fromJson(readObject(jsonDecode(response.body), r'$'));
+      return ProblemDetails.fromJson(
+        readObject(jsonDecode(response.body), r'$'),
+      );
     } on Object {
       return null;
     }
