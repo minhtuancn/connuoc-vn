@@ -37,43 +37,55 @@ void main() {
     );
   });
 
-  test('parses water levels without dropping datum, quality, or provenance', () {
-    final page = WaterLevelPage.fromJson(fixture('water_levels'));
-    final observation = page.items.single;
+  test(
+    'parses water levels without dropping datum, quality, or provenance',
+    () {
+      final page = WaterLevelPage.fromJson(fixture('water_levels'));
+      final observation = page.items.single;
 
-    expect(page.station.defaultDatumId, 'local-gauge-fixture');
-    expect(observation.value, 130.2);
-    expect(observation.unit, WaterLevelUnit.cm);
-    expect(observation.qualityState, QualityState.good);
-    expect(observation.datumId, 'local-gauge-fixture');
-    expect(observation.provenance.importRunId, isNotEmpty);
-    expect(observation.provenance.normalizerVersion, 'fixture-normalizer@1');
-    expect(page.meta.nextCursor, 'eyJvZmZzZXQiOjF9');
-    expect(
-      page.meta.latestObservedAtUtc,
-      DateTime.parse('2026-09-15T01:00:00Z'),
-    );
-  });
+      expect(page.station.defaultDatumId, 'local-gauge-fixture');
+      expect(observation.value, 130.2);
+      expect(observation.unit, WaterLevelUnit.cm);
+      expect(observation.qualityState, QualityState.good);
+      expect(observation.datumId, 'local-gauge-fixture');
+      expect(observation.provenance.importRunId, isNotEmpty);
+      expect(observation.provenance.normalizerVersion, 'fixture-normalizer@1');
+      expect(page.meta.nextCursor, 'eyJvZmZzZXQiOjF9');
+      expect(
+        page.meta.latestObservedAtUtc,
+        DateTime.parse('2026-09-15T01:00:00Z'),
+      );
+    },
+  );
 
-  test('parses tide model provenance and UTC points without recalculating them', () {
-    final tide = TideSeries.fromJson(fixture('tide'));
+  test(
+    'parses tide model provenance and UTC points without recalculating them',
+    () {
+      final tide = TideSeries.fromJson(fixture('tide'));
 
-    expect(tide.stationId, 'public-api-station');
-    expect(tide.points, hasLength(3));
-    expect(tide.points.first.value, 1.5);
-    expect(tide.points.first.timestampUtc, DateTime.parse('2026-01-01T00:00:00Z'));
-    expect(tide.modelId, 'public-api-harmonic');
-    expect(tide.modelVersion, '1.0.0');
-    expect(tide.datumId, 'local-gauge-fixture');
-    expect(tide.unit, WaterLevelUnit.m);
-    expect(tide.phaseConvention, HarmonicPhaseConvention.cosineLagDegrees);
-    expect(tide.provenance.sourceKey, 'public-api-fixture');
-  });
+      expect(tide.stationId, 'public-api-station');
+      expect(tide.points, hasLength(3));
+      expect(tide.points.first.value, 1.5);
+      expect(
+        tide.points.first.timestampUtc,
+        DateTime.parse('2026-01-01T00:00:00Z'),
+      );
+      expect(tide.modelId, 'public-api-harmonic');
+      expect(tide.modelVersion, '1.0.0');
+      expect(tide.datumId, 'local-gauge-fixture');
+      expect(tide.unit, WaterLevelUnit.m);
+      expect(tide.phaseConvention, HarmonicPhaseConvention.cosineLagDegrees);
+      expect(tide.provenance.sourceKey, 'public-api-fixture');
+    },
+  );
 
   test('parses Gregorian/lunar calendar contract exactly as served', () {
     final calendar = CalendarDay.fromJson(fixture('calendar'));
 
-    expect(calendar.solarDate, const CalendarDate(year: 2024, month: 2, day: 10));
+    expect(
+      calendar.solarDate,
+      const CalendarDate(year: 2024, month: 2, day: 10),
+    );
     expect(
       calendar.lunarDate,
       const LunarCalendarDate(year: 2024, month: 1, day: 1, isLeapMonth: false),
