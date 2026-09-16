@@ -42,7 +42,11 @@ class OfflinePackManifest {
        minimumAppVersion = _requireText(minimumAppVersion, 'minimumAppVersion'),
        installedAtUtc = installedAtUtc.toUtc() {
     if (schemaVersion <= 0) {
-      throw ArgumentError.value(schemaVersion, 'schemaVersion', 'must be positive');
+      throw ArgumentError.value(
+        schemaVersion,
+        'schemaVersion',
+        'must be positive',
+      );
     }
     if (this.expiresAtUtc.isBefore(this.generatedAtUtc)) {
       throw ArgumentError('expiresAtUtc must be at or after generatedAtUtc');
@@ -97,7 +101,9 @@ class ValidatedOfflineDataset {
     required this.manifest,
     required List<OfflinePackResourceWrite> resourceWrites,
     required List<OfflinePackEntry> entries,
-  }) : resourceWrites = List<OfflinePackResourceWrite>.unmodifiable(resourceWrites),
+  }) : resourceWrites = List<OfflinePackResourceWrite>.unmodifiable(
+         resourceWrites,
+       ),
        entries = List<OfflinePackEntry>.unmodifiable(entries);
 
   final OfflinePackManifest manifest;

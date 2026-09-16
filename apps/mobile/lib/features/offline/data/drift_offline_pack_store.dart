@@ -19,18 +19,19 @@ class DriftOfflinePackStore implements OfflinePackStore {
 
   @override
   Future<List<OfflinePackManifest>> listManifests() async {
-    final rows = await (_database.select(_database.offlineManifests)
-          ..orderBy([(table) => db.OrderingTerm.asc(table.packId)]))
-        .get();
+    final rows = await (_database.select(
+      _database.offlineManifests,
+    )..orderBy([(table) => db.OrderingTerm.asc(table.packId)])).get();
     return rows.map(_manifestFromRow).toList(growable: false);
   }
 
   @override
   Future<OfflinePackManifest?> getManifest(String packId) async {
     final normalizedPackId = _requireText(packId, 'packId');
-    final row = await (_database.select(_database.offlineManifests)
-          ..where((table) => table.packId.equals(normalizedPackId)))
-        .getSingleOrNull();
+    final row =
+        await (_database.select(_database.offlineManifests)
+              ..where((table) => table.packId.equals(normalizedPackId)))
+            .getSingleOrNull();
     return row == null ? null : _manifestFromRow(row);
   }
 
@@ -45,12 +46,14 @@ class DriftOfflinePackStore implements OfflinePackStore {
         await _writeResource(write);
       }
 
-      await (_database.delete(_database.offlinePackEntries)
-            ..where((table) => table.packId.equals(dataset.manifest.packId)))
-          .go();
+      await (_database.delete(
+        _database.offlinePackEntries,
+      )..where((table) => table.packId.equals(dataset.manifest.packId))).go();
 
       for (final entry in dataset.entries) {
-        await _database.into(_database.offlinePackEntries).insert(
+        await _database
+            .into(_database.offlinePackEntries)
+            .insert(
               db.OfflinePackEntriesCompanion.insert(
                 packId: dataset.manifest.packId,
                 entityType: entry.entityType.storageValue,
@@ -64,9 +67,9 @@ class DriftOfflinePackStore implements OfflinePackStore {
         await Future<void>.sync(hook);
       }
 
-      await _database.into(_database.offlineManifests).insertOnConflictUpdate(
-            _manifestCompanion(dataset.manifest),
-          );
+      await _database
+          .into(_database.offlineManifests)
+          .insertOnConflictUpdate(_manifestCompanion(dataset.manifest));
     });
   }
 
@@ -74,12 +77,12 @@ class DriftOfflinePackStore implements OfflinePackStore {
   Future<void> remove(String packId) async {
     final normalizedPackId = _requireText(packId, 'packId');
     await _database.transaction(() async {
-      await (_database.delete(_database.offlinePackEntries)
-            ..where((table) => table.packId.equals(normalizedPackId)))
-          .go();
-      await (_database.delete(_database.offlineManifests)
-            ..where((table) => table.packId.equals(normalizedPackId)))
-          .go();
+      await (_database.delete(
+        _database.offlinePackEntries,
+      )..where((table) => table.packId.equals(normalizedPackId))).go();
+      await (_database.delete(
+        _database.offlineManifests,
+      )..where((table) => table.packId.equals(normalizedPackId))).go();
     });
   }
 
@@ -147,7 +150,9 @@ Object? _canonicalJsonValue(Object? value) {
 Map<String, Object?> _decodeMap(String value) {
   final decoded = jsonDecode(value);
   if (decoded is! Map) {
-    throw const FormatException('offline manifest summary must be a JSON object');
+    throw const FormatException(
+      'offline manifest summary must be a JSON object',
+    );
   }
   return decoded.map<String, Object?>((key, value) {
     return MapEntry(key.toString(), value);
