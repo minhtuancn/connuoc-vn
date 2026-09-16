@@ -1,0 +1,14 @@
+{
+  "@@locale": "en",
+  "appTitle": "Con Nuoc Viet",
+  "bootstrapHeading": "Vietnam tide calendar",
+  "bootstrapDescription": "The mobile foundation is ready for tide, water-level, and Vietnamese calendar data.",
+  "configuredApiLabel": "API server: {host}",
+  "@configuredApiLabel": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  }
+}
