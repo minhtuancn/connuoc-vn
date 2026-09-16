@@ -26,11 +26,8 @@ class Stations extends Table {
 }
 
 class StationAliases extends Table {
-  TextColumn get stationId => text().references(
-    Stations,
-    #id,
-    onDelete: KeyAction.cascade,
-  )();
+  TextColumn get stationId =>
+      text().references(Stations, #id, onDelete: KeyAction.cascade)();
   TextColumn get alias => text()();
 
   @override
@@ -91,11 +88,8 @@ class TideSeries extends Table {
 }
 
 class TidePoints extends Table {
-  TextColumn get seriesKey => text().references(
-    TideSeries,
-    #cacheKey,
-    onDelete: KeyAction.cascade,
-  )();
+  TextColumn get seriesKey =>
+      text().references(TideSeries, #cacheKey, onDelete: KeyAction.cascade)();
   DateTimeColumn get timestampUtc => dateTime()();
   RealColumn get value => real()();
 
@@ -259,7 +253,8 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.executor);
 
-  factory AppDatabase.inMemory() => AppDatabase.forTesting(NativeDatabase.memory());
+  factory AppDatabase.inMemory() =>
+      AppDatabase.forTesting(NativeDatabase.memory());
 
   @override
   int get schemaVersion => 2;

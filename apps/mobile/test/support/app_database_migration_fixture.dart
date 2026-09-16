@@ -34,27 +34,31 @@ class AppDatabaseMigrationFixture {
     required String timeZone,
   }) async {
     final database = _requireDatabase();
-    await database.into(database.stations).insert(
-      StationsCompanion.insert(
-        id: id,
-        name: name,
-        stationType: 'tide',
-        timeZone: timeZone,
-        latitude: 20.15,
-        longitude: 106.15,
-        localUpdatedAtUtc: DateTime.utc(2026, 9, 16),
-      ),
-    );
+    await database
+        .into(database.stations)
+        .insert(
+          StationsCompanion.insert(
+            id: id,
+            name: name,
+            stationType: 'tide',
+            timeZone: timeZone,
+            latitude: 20.15,
+            longitude: 106.15,
+            localUpdatedAtUtc: DateTime.utc(2026, 9, 16),
+          ),
+        );
   }
 
   Future<void> seedFavorite(String stationId) async {
     final database = _requireDatabase();
-    await database.into(database.favorites).insert(
-      FavoritesCompanion.insert(
-        stationId: stationId,
-        createdAtUtc: DateTime.utc(2026, 9, 16, 1),
-      ),
-    );
+    await database
+        .into(database.favorites)
+        .insert(
+          FavoritesCompanion.insert(
+            stationId: stationId,
+            createdAtUtc: DateTime.utc(2026, 9, 16, 1),
+          ),
+        );
   }
 
   Future<AppDatabase> upgradeToCurrent() async {
