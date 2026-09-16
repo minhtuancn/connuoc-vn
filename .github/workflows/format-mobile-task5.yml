@@ -1,0 +1,64 @@
+name: Format mobile Task 5
+
+on:
+  push:
+    branches:
+      - phase-3/mobile-offline-persistence
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: phase-3/mobile-offline-persistence
+          fetch-depth: 0
+
+      - name: Setup Flutter 3.47.3
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.47.3'
+          channel: stable
+          cache: true
+
+      - name: Format Task 5 test and sources
+        run: |
+          files=(
+            test/features/offline/offline_pack_store_test.dart
+            lib/features/offline/domain/offline_pack.dart
+            lib/features/offline/data/offline_pack_store.dart
+            lib/features/offline/data/drift_offline_pack_store.dart
+          )
+          existing=()
+          for file in "${files[@]}"; do
+            if [[ -f "$file" ]]; then
+              existing+=("$file")
+            fi
+          done
+          if (( ${#existing[@]} )); then
+            dart format "${existing[@]}"
+          fi
+
+      - name: Commit formatted Task 5 files
+        working-directory: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add \
+            apps/mobile/test/features/offline/offline_pack_store_test.dart \
+            apps/mobile/lib/features/offline/domain/offline_pack.dart \
+            apps/mobile/lib/features/offline/data/offline_pack_store.dart \
+            apps/mobile/lib/features/offline/data/drift_offline_pack_store.dart 2>/dev/null || true
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'style(mobile): format Task 5 persistence files'
+          git push origin HEAD:phase-3/mobile-offline-persistence
