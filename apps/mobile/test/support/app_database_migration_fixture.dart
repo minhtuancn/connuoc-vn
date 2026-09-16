@@ -23,6 +23,7 @@ class AppDatabaseMigrationFixture {
     await database.customStatement('DROP TABLE offline_pack_entries');
     await database.customStatement('DROP TABLE offline_manifests');
     await database.customStatement('DROP TABLE sync_states');
+    await database.customStatement('DROP TABLE station_detail_caches');
     await database.customStatement('PRAGMA user_version = 1');
 
     return AppDatabaseMigrationFixture._(directory, file, database);
