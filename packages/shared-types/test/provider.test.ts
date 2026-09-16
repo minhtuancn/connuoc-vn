@@ -5,8 +5,8 @@ import {
   DeploymentUseSchema,
   ProviderCapabilitySchema,
   ProviderHealthStateSchema,
+  ProviderRedistributionStatusSchema,
   ProviderSelectionRequestSchema,
-  RedistributionStatusSchema,
 } from '../src/index.ts';
 
 const expectedCapabilities = [
@@ -37,7 +37,7 @@ describe('provider contracts', () => {
 
   it('keeps policy and health status strings stable', () => {
     expect(CommercialUseStatusSchema.options).toEqual(['ALLOWED', 'RESTRICTED', 'UNKNOWN']);
-    expect(RedistributionStatusSchema.options).toEqual([
+    expect(ProviderRedistributionStatusSchema.options).toEqual([
       'ALLOWED',
       'RESTRICTED',
       'ATTRIBUTION_REQUIRED',
