@@ -83,10 +83,7 @@ void main() {
         cachePolicy: policy,
       );
 
-      classifyResourceFreshness(
-        resource,
-        DateTime.utc(2026, 9, 16, 0, 15),
-      );
+      classifyResourceFreshness(resource, DateTime.utc(2026, 9, 16, 0, 15));
 
       expect(resource.fetchedAtUtc, fetchedAtUtc);
     });

@@ -63,13 +63,18 @@ void main() {
         cacheKeyForWaterLevels(base),
         'water|station=station-1|start=|end=|limit=20|cursor=',
       );
-      expect(cacheKeyForWaterLevels(ranged), isNot(cacheKeyForWaterLevels(base)));
+      expect(
+        cacheKeyForWaterLevels(ranged),
+        isNot(cacheKeyForWaterLevels(base)),
+      );
     });
 
     test('calendar key uses zero-padded Gregorian date', () {
       expect(
         cacheKeyForCalendar(
-          const CalendarRequest(date: CalendarDate(year: 2026, month: 9, day: 6)),
+          const CalendarRequest(
+            date: CalendarDate(year: 2026, month: 9, day: 6),
+          ),
         ),
         'calendar|date=2026-09-06',
       );
