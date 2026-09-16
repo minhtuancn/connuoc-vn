@@ -1,0 +1,7 @@
+{
+  "type": "about:blank",
+  "title": "Request Failed",
+  "status": 404,
+  "detail": "Station 'missing-station' was not found.",
+  "instance": "/v1/stations/missing-station"
+}
