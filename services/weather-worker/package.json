@@ -2,6 +2,7 @@
   "name": "@connuoc/weather-worker",
   "version": "0.0.0",
   "private": true,
+  "description": "Provider adapter and orchestration foundation for weather and hydrology ingestion.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
