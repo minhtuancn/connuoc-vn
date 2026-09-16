@@ -50,11 +50,11 @@ void main() {
               .getSingle();
 
       expect(row.resourceKind, 'station');
-      expect(row.lastAttemptAtUtc, failure);
-      expect(row.lastSuccessfulRefreshAtUtc, success);
+      expect(row.lastAttemptAtUtc?.toUtc(), failure);
+      expect(row.lastSuccessfulRefreshAtUtc?.toUtc(), success);
       expect(row.lastFailureKind, 'network');
-      expect(row.latestRemoteGeneratedAtUtc, generated);
-      expect(row.latestObservedAtUtc, observed);
+      expect(row.latestRemoteGeneratedAtUtc?.toUtc(), generated);
+      expect(row.latestObservedAtUtc?.toUtc(), observed);
     },
   );
 
@@ -89,7 +89,7 @@ void main() {
               .getSingle();
 
       expect(row.lastFailureKind, isNull);
-      expect(row.latestRemoteGeneratedAtUtc, generated);
+      expect(row.latestRemoteGeneratedAtUtc?.toUtc(), generated);
       expect(row.latestObservedAtUtc, isNull);
     },
   );
