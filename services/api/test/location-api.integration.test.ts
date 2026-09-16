@@ -1,7 +1,9 @@
+import type { FastifyInstance } from 'fastify';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { buildApplication } from '../src/bootstrap.js';
+import { createApiApp } from '../src/bootstrap.js';
+import { parseApiEnvironment } from '../src/config/env.js';
 
 const { Client } = pg;
 const databaseUrl = process.env.DATABASE_URL;
@@ -9,8 +11,16 @@ if (!databaseUrl) {
   throw new Error('DATABASE_URL is required for location API integration tests');
 }
 
-const app = await buildApplication({ allowMissingDatabase: false, logger: false });
+const environment = parseApiEnvironment({
+  NODE_ENV: 'test',
+  API_HOST: '127.0.0.1',
+  API_PORT: '3000',
+  LOG_LEVEL: 'silent',
+});
+
 const client = new Client({ connectionString: databaseUrl, application_name: 'location-api-integration' });
+let app: Awaited<ReturnType<typeof createApiApp>>;
+let fastify: FastifyInstance;
 
 beforeAll(async () => {
   await client.connect();
@@ -69,16 +79,20 @@ beforeAll(async () => {
      ) VALUES ($1, $2, 'REORGANIZED_TO', DATE '2025-07-01', $3)`,
     [historical.rows[0]!.id, commune.rows[0]!.id, sourceId],
   );
+
+  app = await createApiApp(environment);
+  await app.init();
+  fastify = app.getHttpAdapter().getInstance() as FastifyInstance;
 });
 
 afterAll(async () => {
-  await app.close();
+  await app?.close();
   await client.end();
 });
 
 describe('versioned public location APIs', () => {
   it('searches current administrative areas anonymously without changing the legacy station default', async () => {
-    const response = await app.inject({
+    const response = await fastify.inject({
       method: 'GET',
       url: '/v1/locations/search?q=Ngh%C4%A9a%20Phong&scope=administrative&effectiveAt=2026-09-17',
     });
@@ -101,7 +115,7 @@ describe('versioned public location APIs', () => {
   });
 
   it('marks legacy district search results as historical and returns verified successors', async () => {
-    const response = await app.inject({
+    const response = await fastify.inject({
       method: 'GET',
       url: '/v1/locations/search?q=Nghia%20Hung&scope=administrative&effectiveAt=2026-09-17',
     });
@@ -117,7 +131,7 @@ describe('versioned public location APIs', () => {
   });
 
   it('resolves a WGS84 point to the two-tier hierarchy with explicit Vietnam timezone', async () => {
-    const response = await app.inject({
+    const response = await fastify.inject({
       method: 'GET',
       url: '/v1/locations/resolve?lat=19.5&lon=105.5&effectiveAt=2026-09-17',
     });
@@ -137,7 +151,7 @@ describe('versioned public location APIs', () => {
   });
 
   it('does not fabricate administrative context outside known polygons', async () => {
-    const response = await app.inject({
+    const response = await fastify.inject({
       method: 'GET',
       url: '/v1/locations/resolve?lat=10&lon=110&effectiveAt=2026-09-17',
     });
@@ -157,7 +171,7 @@ describe('versioned public location APIs', () => {
     '/v1/locations/search?q=Nghia&scope=administrative&effectiveAt=2026-02-30',
     '/v1/locations/resolve?lat=91&lon=105',
   ])('rejects invalid public location request %s', async (url) => {
-    const response = await app.inject({ method: 'GET', url });
+    const response = await fastify.inject({ method: 'GET', url });
     expect(response.statusCode).toBe(400);
   });
 });
