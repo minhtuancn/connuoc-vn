@@ -231,6 +231,8 @@ void main() {
       final result = await repository.getStation(station.id);
 
       expect(identical(result, old), isTrue);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
       expect(remote.stationCalls, 1);
       refreshGate.complete(refreshed);
       await Future<void>.delayed(Duration.zero);
@@ -257,6 +259,8 @@ void main() {
 
     expect(results, hasLength(2));
     expect(results.every((item) => identical(item, old)), isTrue);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
     expect(remote.stationCalls, 1);
     refreshGate.complete(resource(updatedStation, fetchedAtUtc: now));
     await Future<void>.delayed(Duration.zero);
