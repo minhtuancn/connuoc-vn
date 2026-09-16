@@ -1,0 +1,56 @@
+name: Format mobile Task 4
+
+on:
+  push:
+    branches:
+      - phase-3/mobile-offline-persistence
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: phase-3/mobile-offline-persistence
+          fetch-depth: 0
+
+      - name: Setup Flutter 3.47.3
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.47.3'
+          channel: stable
+          cache: true
+
+      - name: Format Task 4 sources and tests
+        run: |
+          dart format \
+            lib/features/offline/data/sync_state_store.dart \
+            lib/features/offline/data/drift_sync_state_store.dart \
+            lib/features/public_data/data/cached_public_data_repository.dart \
+            test/features/offline/sync_state_store_test.dart \
+            test/features/public_data/cached_public_data_repository_test.dart
+
+      - name: Commit formatted Task 4 files
+        working-directory: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add \
+            apps/mobile/lib/features/offline/data/sync_state_store.dart \
+            apps/mobile/lib/features/offline/data/drift_sync_state_store.dart \
+            apps/mobile/lib/features/public_data/data/cached_public_data_repository.dart \
+            apps/mobile/test/features/offline/sync_state_store_test.dart \
+            apps/mobile/test/features/public_data/cached_public_data_repository_test.dart
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'style(mobile): format Task 4 persistence files'
+          git push origin HEAD:phase-3/mobile-offline-persistence
