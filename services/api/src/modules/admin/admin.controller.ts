@@ -9,6 +9,7 @@ import {
   NotFoundException,
   Param,
   Patch,
+  Put,
   Req,
   Res,
   ServiceUnavailableException,
@@ -33,6 +34,14 @@ import {
   type AdminMutationContext,
 } from './admin.repository.js';
 import type { AdminActor } from './admin.types.js';
+import {
+  ProviderConfigPolicyError,
+  ProviderConfigService,
+} from './provider-config.service.js';
+import {
+  ProviderConfigWriteSchema,
+  ProviderStatusPatchSchema,
+} from './provider-config.types.js';
 
 const IdentifierSchema = z
   .string()
@@ -104,6 +113,13 @@ function mapAdminDataError(error: unknown): never {
   throw new ServiceUnavailableException(error.message);
 }
 
+function mapProviderConfigError(error: unknown): never {
+  if (error instanceof ProviderConfigPolicyError) {
+    throw new BadRequestException(`${error.code}: ${error.message}`);
+  }
+  return mapAdminDataError(error);
+}
+
 function correlationId(request: FastifyRequest, reply: FastifyReply): string {
   const candidate = request.headers['x-request-id'];
   const value = typeof candidate === 'string' ? parseOrBadRequest(CorrelationIdSchema, candidate) : randomUUID();
@@ -129,7 +145,10 @@ function mutationContext(
 @Controller('admin')
 @UseGuards(AdminAuthGuard, AdminCapabilityGuard)
 export class AdminController {
-  constructor(@Inject(PgAdminRepository) private readonly repository: PgAdminRepository) {}
+  constructor(
+    @Inject(PgAdminRepository) private readonly repository: PgAdminRepository,
+    @Inject(ProviderConfigService) private readonly providerConfigs: ProviderConfigService,
+  ) {}
 
   @Get('sources')
   @RequireAdminCapabilities('admin:read')
@@ -140,6 +159,77 @@ export class AdminController {
       return { items: await this.repository.listSources() };
     } catch (error) {
       mapAdminDataError(error);
+    }
+  }
+
+  @Get('providers')
+  @RequireAdminCapabilities('admin:read')
+  @ApiOperation({ summary: 'List secret-safe provider configuration metadata' })
+  async listProviders() {
+    try {
+      return { items: await this.providerConfigs.list() };
+    } catch (error) {
+      mapProviderConfigError(error);
+    }
+  }
+
+  @Get('providers/:providerKey')
+  @RequireAdminCapabilities('admin:read')
+  @ApiParam({ name: 'providerKey', type: String })
+  @ApiOperation({ summary: 'Read one secret-safe provider configuration' })
+  async getProvider(@Param('providerKey') providerKeyRaw: string) {
+    const providerKey = parseOrBadRequest(IdentifierSchema, providerKeyRaw);
+    try {
+      const provider = await this.providerConfigs.get(providerKey);
+      if (!provider) throw new NotFoundException(`Provider '${providerKey}' was not found.`);
+      return provider;
+    } catch (error) {
+      mapProviderConfigError(error);
+    }
+  }
+
+  @Put('providers/:providerKey')
+  @RequireAdminCapabilities('providers:write')
+  @ApiParam({ name: 'providerKey', type: String })
+  @ApiOperation({ summary: 'Create or replace provider configuration and append a safe audit record' })
+  @ApiBody({ schema: { type: 'object', additionalProperties: false } })
+  async putProvider(
+    @Param('providerKey') providerKeyRaw: string,
+    @Body() body: unknown,
+    @CurrentAdminActor() actor: AdminActor,
+    @Req() request: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    const providerKey = parseOrBadRequest(IdentifierSchema, providerKeyRaw);
+    const input = parseOrBadRequest(ProviderConfigWriteSchema, body);
+    try {
+      return await this.providerConfigs.put(providerKey, input, mutationContext(actor, request, reply));
+    } catch (error) {
+      mapProviderConfigError(error);
+    }
+  }
+
+  @Patch('providers/:providerKey/status')
+  @RequireAdminCapabilities('providers:write')
+  @ApiParam({ name: 'providerKey', type: String })
+  @ApiOperation({ summary: 'Change provider operational status and append a safe audit record' })
+  async patchProviderStatus(
+    @Param('providerKey') providerKeyRaw: string,
+    @Body() body: unknown,
+    @CurrentAdminActor() actor: AdminActor,
+    @Req() request: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    const providerKey = parseOrBadRequest(IdentifierSchema, providerKeyRaw);
+    const patch = parseOrBadRequest(ProviderStatusPatchSchema, body);
+    try {
+      return await this.providerConfigs.patchStatus(
+        providerKey,
+        patch,
+        mutationContext(actor, request, reply),
+      );
+    } catch (error) {
+      mapProviderConfigError(error);
     }
   }
 
