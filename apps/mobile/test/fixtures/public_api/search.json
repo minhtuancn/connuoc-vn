@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "id": "public-api-station",
+      "name": "Public API Fixture Station",
+      "stationType": "multi",
+      "timeZone": "Asia/Ho_Chi_Minh",
+      "location": {"latitude": 20.25, "longitude": 106.08},
+      "aliases": ["Tram thu nghiem"]
+    }
+  ],
+  "meta": {
+    "generatedAt": "2026-09-15T02:00:00.000Z",
+    "nextCursor": "eyJvZmZzZXQiOjF9"
+  }
+}
