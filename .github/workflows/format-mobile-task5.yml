@@ -28,6 +28,7 @@ jobs:
           cache: true
 
       - name: Format Task 5 test and sources
+        # This workflow is temporary and is removed once Task 5 is stable.
         run: |
           files=(
             test/features/offline/offline_pack_store_test.dart
