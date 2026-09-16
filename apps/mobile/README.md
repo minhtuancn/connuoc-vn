@@ -39,6 +39,24 @@ flutter run --dart-define=CONNUOC_API_BASE_URL=https://api.example.test
 
 Mobile configuration intentionally has no admin token or production credential field.
 
+## Public API client
+
+Phase 3 uses a typed `/v1` public API boundary. Feature code consumes `PublicDataRepository`; widgets must not call raw HTTP or parse transport JSON directly.
+
+The client currently covers location search, station details, tide series, water levels, and Gregorian/Vietnamese lunar-calendar data. It preserves backend provenance/model timestamps and HTTP freshness metadata. Required-field contract drift fails closed instead of inventing fallback values.
+
+Transport policy is deliberately small and predictable:
+
+- default timeout is 15 seconds;
+- caller cancellation uses a real HTTP abort trigger;
+- automatic retry count is zero;
+- RFC problem-details responses are preserved when valid;
+- network, timeout, cancellation, malformed-response, and HTTP failures are typed.
+
+Riverpod exposes `httpClientProvider` and `publicDataRepositoryProvider`, allowing tests and #42/#44 to replace the repository without coupling widgets to the HTTP implementation.
+
+See `docs/PHASE-3-MOBILE-API-CLIENT.md` for the compatibility, drift, cancellation, freshness, and handoff contract.
+
 ## Responsibilities
 
 - Home water-status experience.
@@ -80,10 +98,9 @@ Only directories needed by implemented features are committed. Widgets must not 
 
 ## Phase 3 dependency handoff
 
-After #40 merges:
-
-- #41 owns typed public API requests/DTO mapping and transport failures.
+- #41 owns typed public API requests/DTO mapping, transport failures, freshness metadata, cancellation, and the Riverpod repository boundary.
 - #43 owns the production app shell, navigation, design, localization and accessibility primitives.
-- #42 owns Drift/local database and repository persistence.
+- #42 owns Drift/local database and repository persistence behind `PublicDataRepository`.
+- #44 consumes the repository abstraction for production public-data flows.
 
-Bootstrap code should remain small enough that these issues extend it rather than replace it.
+The mobile foundation should remain small enough that later issues extend it rather than replace it.
