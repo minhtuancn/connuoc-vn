@@ -1,0 +1,49 @@
+name: Fix mobile API package import
+
+on:
+  push:
+    branches:
+      - phase-3/mobile-api-client
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: phase-3/mobile-api-client
+          fetch-depth: 0
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.47.3'
+          channel: stable
+          cache: true
+      - name: Use package import and format
+        working-directory: apps/mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('lib/features/public_data/domain/public_data_models.dart')
+          text = path.read_text()
+          old = "import '../../../core/network/json_readers.dart';"
+          new = "import 'package:connuoc_viet/core/network/json_readers.dart';"
+          if old not in text:
+              raise SystemExit('expected relative import not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          dart format lib/features/public_data/domain/public_data_models.dart
+      - name: Commit fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add apps/mobile/lib/features/public_data/domain/public_data_models.dart
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(mobile): use package import in public data models'
+          git push origin HEAD:phase-3/mobile-api-client
