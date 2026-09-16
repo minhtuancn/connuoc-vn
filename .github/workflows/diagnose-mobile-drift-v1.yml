@@ -1,0 +1,69 @@
+name: Diagnose mobile Drift v1 fixture
+
+on:
+  push:
+    branches:
+      - phase-3/mobile-offline-persistence
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: phase-3/mobile-offline-persistence
+          fetch-depth: 0
+
+      - name: Setup Flutter 3.47.3
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.47.3'
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Generate Drift Dart code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Run fixture and capture diagnostic
+        id: fixture
+        shell: bash
+        run: |
+          set +e
+          mkdir -p drift_schemas
+          rm -f drift_schemas/v1-fixture-diagnostic.txt drift_schemas/version1.sqlite
+          dart run tool/create_v1_schema_fixture.dart drift_schemas/version1.sqlite \
+            > drift_schemas/v1-fixture-diagnostic.txt 2>&1
+          status=$?
+          cat drift_schemas/v1-fixture-diagnostic.txt
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Commit diagnostic
+        if: steps.fixture.outputs.status != '0'
+        working-directory: .
+        run: |
+          git add apps/mobile/drift_schemas/v1-fixture-diagnostic.txt
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'chore(mobile): capture focused Drift v1 failure'
+            git push origin HEAD:phase-3/mobile-offline-persistence
+          fi
+          exit 1
+
+      - name: Fail if fixture failed without new diagnostic
+        if: steps.fixture.outputs.status != '0'
+        run: exit 1
+
+      - name: Confirm fixture success
+        if: steps.fixture.outputs.status == '0'
+        run: echo 'v1 fixture created successfully'
