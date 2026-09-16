@@ -15,9 +15,7 @@ CacheFreshness classifyFreshness(
     return CacheFreshness.fresh;
   }
 
-  final staleWhileRevalidateUntil = freshUntil.add(
-    policy.staleWhileRevalidate,
-  );
+  final staleWhileRevalidateUntil = freshUntil.add(policy.staleWhileRevalidate);
   if (!current.isAfter(staleWhileRevalidateUntil)) {
     return CacheFreshness.staleRevalidatable;
   }
@@ -29,9 +27,5 @@ CacheFreshness classifyResourceFreshness<T>(
   RemoteResource<T> resource,
   DateTime now,
 ) {
-  return classifyFreshness(
-    resource.fetchedAtUtc,
-    resource.cachePolicy,
-    now,
-  );
+  return classifyFreshness(resource.fetchedAtUtc, resource.cachePolicy, now);
 }
