@@ -4,7 +4,9 @@ import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 export function buildOpenApiDocument(app: NestFastifyApplication): OpenAPIObject {
   const config = new DocumentBuilder()
     .setTitle('Con Nước Việt API')
-    .setDescription('Public and administrative API for tide, water-level, calendar and provenance data.')
+    .setDescription(
+      'Public and administrative API for tide, water-level, calendar, versioned location and provenance data.',
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {

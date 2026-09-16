@@ -14,6 +14,7 @@ import { ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestj
 import type { FastifyReply } from 'fastify';
 import { z } from 'zod';
 
+import { LocationService } from '../locations/location.service.js';
 import { PublicDataService } from './public-data.service.js';
 import { PublicDataError } from './public-data.types.js';
 
@@ -23,11 +24,37 @@ const StationIdSchema = z
   .max(128)
   .regex(/^[A-Za-z0-9][A-Za-z0-9._:-]*$/, 'Invalid station identifier');
 
-const SearchQuerySchema = z.object({
-  q: z.string().trim().min(2).max(160),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-  cursor: z.string().trim().min(1).optional(),
-});
+const SearchQuerySchema = z
+  .object({
+    q: z.string().trim().min(2).max(160),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+    cursor: z.string().trim().min(1).optional(),
+    scope: z.enum(['stations', 'administrative']).default('stations'),
+    effectiveAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.scope === 'administrative' && value.limit > 50) {
+      context.addIssue({
+        code: 'custom',
+        path: ['limit'],
+        message: 'administrative search limit must not exceed 50',
+      });
+    }
+    if (value.scope === 'administrative' && value.cursor !== undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: ['cursor'],
+        message: 'cursor is not supported for administrative search',
+      });
+    }
+    if (value.scope === 'stations' && value.effectiveAt !== undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: ['effectiveAt'],
+        message: 'effectiveAt is only supported for administrative search',
+      });
+    }
+  });
 
 const InstantSchema = z.string().datetime({ offset: true });
 
@@ -95,7 +122,7 @@ function parseStationId(value: string): string {
   return result.data;
 }
 
-function toSolarDate(value: string): { year: number; month: number; day: number } {
+function parseCalendarDate(value: string, fieldName: string): Date {
   const [yearText, monthText, dayText] = value.split('-');
   const year = Number(yearText);
   const month = Number(monthText);
@@ -106,9 +133,29 @@ function toSolarDate(value: string): { year: number; month: number; day: number 
     date.getUTCMonth() + 1 !== month ||
     date.getUTCDate() !== day
   ) {
-    throw new BadRequestException('date does not exist in the Gregorian calendar');
+    throw new BadRequestException(`${fieldName} does not exist in the Gregorian calendar`);
   }
-  return { year, month, day };
+  return date;
+}
+
+function toSolarDate(value: string): { year: number; month: number; day: number } {
+  const date = parseCalendarDate(value, 'date');
+  return {
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
+  };
+}
+
+function vietnamToday(): string {
+  const parts = new Intl.DateTimeFormat('en', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value;
+  return `${part('year')}-${part('month')}-${part('day')}`;
 }
 
 function translatePublicDataError(error: unknown): never {
@@ -131,18 +178,41 @@ function setCache(reply: FastifyReply, value: string): void {
 @ApiTags('public-data')
 @Controller()
 export class PublicDataController {
-  constructor(@Inject(PublicDataService) private readonly service: PublicDataService) {}
+  constructor(
+    @Inject(PublicDataService) private readonly service: PublicDataService,
+    @Inject(LocationService) private readonly locationService: LocationService,
+  ) {}
 
   @Get('locations/search')
-  @ApiOperation({ summary: 'Search public stations and aliases' })
+  @ApiOperation({ summary: 'Search public stations or versioned administrative areas' })
   @ApiQuery({ name: 'q', required: true, type: String })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'cursor', required: false, type: String })
+  @ApiQuery({ name: 'scope', required: false, enum: ['stations', 'administrative'] })
+  @ApiQuery({ name: 'effectiveAt', required: false, type: String, example: '2026-09-17' })
   @ApiOkResponse({ schema: { type: 'object', additionalProperties: true } })
   async searchLocations(@Query() rawQuery: unknown, @Res({ passthrough: true }) reply: FastifyReply) {
     const parsed = SearchQuerySchema.safeParse(rawQuery);
     if (!parsed.success) throw new BadRequestException(validationDetail(parsed.error));
     setCache(reply, 'public, max-age=300, stale-while-revalidate=600');
+
+    if (parsed.data.scope === 'administrative') {
+      const effectiveAtText = parsed.data.effectiveAt ?? vietnamToday();
+      const effectiveAt = parseCalendarDate(effectiveAtText, 'effectiveAt');
+      const items = await this.locationService.search({
+        query: parsed.data.q,
+        effectiveAt,
+        limit: parsed.data.limit,
+      });
+      return {
+        items,
+        meta: {
+          scope: 'administrative',
+          effectiveAt: effectiveAtText,
+        },
+      };
+    }
+
     try {
       return await this.service.searchLocations(parsed.data.q, {
         limit: parsed.data.limit,

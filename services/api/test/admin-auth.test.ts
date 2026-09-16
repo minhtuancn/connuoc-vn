@@ -31,12 +31,14 @@ describe('admin authentication contracts', () => {
       'sources:write',
       'stations:write',
       'imports:annotate',
+      'providers:write',
     ]);
     expect(capabilitiesForRole('administrator')).toEqual([
       'admin:read',
       'sources:write',
       'stations:write',
       'imports:annotate',
+      'providers:write',
       'admin:manage',
     ]);
   });
@@ -48,7 +50,7 @@ describe('admin authentication contracts', () => {
       role: 'data-operator',
       capabilities: capabilitiesForRole('data-operator'),
     };
-    expect(hasAdminCapabilities(actor, ['admin:read', 'sources:write'])).toBe(true);
+    expect(hasAdminCapabilities(actor, ['admin:read', 'providers:write'])).toBe(true);
     expect(hasAdminCapabilities(actor, ['admin:read', 'admin:manage'])).toBe(false);
   });
 });
