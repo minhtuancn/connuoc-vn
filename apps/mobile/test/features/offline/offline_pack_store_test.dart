@@ -1,5 +1,6 @@
 // Task 5 contract: validated pack replacement must be atomic and rollback-safe.
-import 'package:connuoc_viet/core/database/app_database.dart';
+import 'package:connuoc_viet/core/database/app_database.dart'
+    hide OfflinePackEntry;
 import 'package:connuoc_viet/core/database/cache_key.dart';
 import 'package:connuoc_viet/core/network/cache_policy.dart';
 import 'package:connuoc_viet/features/offline/data/drift_offline_pack_store.dart';
@@ -7,7 +8,7 @@ import 'package:connuoc_viet/features/offline/domain/offline_pack.dart';
 import 'package:connuoc_viet/features/public_data/data/drift_public_data_cache_store.dart';
 import 'package:connuoc_viet/features/public_data/domain/public_data_models.dart';
 import 'package:connuoc_viet/features/public_data/domain/public_data_repository.dart';
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:flutter_test/flutter_test.dart';
 
 RemoteResource<StationDetails> stationResource(
