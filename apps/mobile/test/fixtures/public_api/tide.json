@@ -1,0 +1,26 @@
+{
+  "stationId": "public-api-station",
+  "startUtc": "2026-01-01T00:00:00.000Z",
+  "endUtc": "2026-01-01T02:00:00.000Z",
+  "intervalSeconds": 3600,
+  "points": [
+    {"timestampUtc": "2026-01-01T00:00:00.000Z", "value": 1.5},
+    {"timestampUtc": "2026-01-01T01:00:00.000Z", "value": 1.437},
+    {"timestampUtc": "2026-01-01T02:00:00.000Z", "value": 1.259}
+  ],
+  "meta": {
+    "generatedAt": "2026-09-15T02:00:00.000Z",
+    "modelId": "public-api-harmonic",
+    "modelVersion": "1.0.0",
+    "datumId": "local-gauge-fixture",
+    "unit": "m",
+    "timeZone": "Asia/Ho_Chi_Minh",
+    "phaseConvention": "cosine_lag_degrees",
+    "referenceEpochUtc": "2026-01-01T00:00:00.000Z",
+    "constituentCount": 1,
+    "provenance": {
+      "sourceKey": "public-api-fixture",
+      "importRunId": "11111111-1111-1111-1111-111111111111"
+    }
+  }
+}
