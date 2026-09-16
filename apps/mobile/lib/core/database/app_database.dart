@@ -34,6 +34,17 @@ class StationAliases extends Table {
   Set<Column<Object>> get primaryKey => {stationId, alias};
 }
 
+class StationDetailCaches extends Table {
+  TextColumn get stationId =>
+      text().references(Stations, #id, onDelete: KeyAction.cascade)();
+  DateTimeColumn get fetchedAtUtc => dateTime()();
+  IntColumn get maxAgeSeconds => integer()();
+  IntColumn get staleWhileRevalidateSeconds => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {stationId};
+}
+
 class LocationSearchPages extends Table {
   TextColumn get cacheKey => text()();
   TextColumn get query => text()();
@@ -233,6 +244,7 @@ class SyncStates extends Table {
   tables: [
     Stations,
     StationAliases,
+    StationDetailCaches,
     LocationSearchPages,
     LocationSearchPageItems,
     TideSeries,
@@ -264,6 +276,7 @@ class AppDatabase extends _$AppDatabase {
     onCreate: (migrator) => migrator.createAll(),
     onUpgrade: (migrator, from, to) async {
       if (from < 2) {
+        await migrator.createTable(stationDetailCaches);
         await migrator.createTable(offlineManifests);
         await migrator.createTable(offlinePackEntries);
         await migrator.createTable(syncStates);
