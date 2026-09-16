@@ -284,6 +284,30 @@ void main() {
     },
   );
 
+  test('two concurrent expired reads share one foreground refresh', () async {
+    final old = resource(
+      station,
+      fetchedAtUtc: now.subtract(const Duration(minutes: 31)),
+    );
+    final refreshGate = Completer<RemoteResource<StationDetails>>();
+    cache.station = old;
+    remote.onGetStation = (_, _) => refreshGate.future;
+
+    final first = repository.getStation(station.id);
+    final second = repository.getStation(station.id);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(remote.stationCalls, 1);
+
+    final refreshed = resource(updatedStation, fetchedAtUtc: now);
+    refreshGate.complete(refreshed);
+    final results = await Future.wait([first, second]);
+
+    expect(results.every((item) => identical(item, refreshed)), isTrue);
+    expect(cache.stationPutCount, 1);
+  });
+
   test(
     'expired cache falls back to last known good when remote fails',
     () async {
