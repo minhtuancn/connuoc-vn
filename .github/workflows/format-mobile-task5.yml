@@ -51,11 +51,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git add \
-            apps/mobile/test/features/offline/offline_pack_store_test.dart \
-            apps/mobile/lib/features/offline/domain/offline_pack.dart \
-            apps/mobile/lib/features/offline/data/offline_pack_store.dart \
-            apps/mobile/lib/features/offline/data/drift_offline_pack_store.dart 2>/dev/null || true
+          files=(
+            apps/mobile/test/features/offline/offline_pack_store_test.dart
+            apps/mobile/lib/features/offline/domain/offline_pack.dart
+            apps/mobile/lib/features/offline/data/offline_pack_store.dart
+            apps/mobile/lib/features/offline/data/drift_offline_pack_store.dart
+          )
+          existing=()
+          for file in "${files[@]}"; do
+            if [[ -f "$file" ]]; then
+              existing+=("$file")
+            fi
+          done
+          if (( ${#existing[@]} )); then
+            git add "${existing[@]}"
+          fi
           if git diff --cached --quiet; then
             exit 0
           fi
