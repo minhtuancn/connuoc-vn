@@ -1,0 +1,36 @@
+name: Format mobile provider test
+
+on:
+  push:
+    branches:
+      - phase-3/mobile-api-client
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: phase-3/mobile-api-client
+          fetch-depth: 0
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.47.3'
+          channel: stable
+          cache: true
+      - name: Format provider test
+        working-directory: apps/mobile
+        run: dart format test/features/public_data/public_data_providers_test.dart
+      - name: Commit formatter output
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add apps/mobile/test/features/public_data/public_data_providers_test.dart
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'style(mobile): format provider tests'
+          git push origin HEAD:phase-3/mobile-api-client
