@@ -137,13 +137,13 @@ String _encodeCanonicalMap(Map<String, Object?> value) {
 
 Object? _canonicalJsonValue(Object? value) {
   if (value is Map) {
-    final entries = value.entries
-        .map((entry) => MapEntry(entry.key.toString(), entry.value))
-        .toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+    final entries =
+        value.entries
+            .map((entry) => MapEntry(entry.key.toString(), entry.value))
+            .toList()
+          ..sort((a, b) => a.key.compareTo(b.key));
     return <String, Object?>{
-      for (final entry in entries)
-        entry.key: _canonicalJsonValue(entry.value),
+      for (final entry in entries) entry.key: _canonicalJsonValue(entry.value),
     };
   }
   if (value is Iterable) {
