@@ -1,4 +1,4 @@
-import '../../../core/network/json_readers.dart';
+import 'package:connuoc_viet/core/network/json_readers.dart';
 
 enum WaterLevelUnit { m, cm, mm }
 
