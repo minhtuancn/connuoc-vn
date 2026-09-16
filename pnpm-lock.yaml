@@ -293,6 +293,16 @@ importers:
         specifier: 8.23.1
         version: 8.23.1
 
+  services/weather-worker:
+    dependencies:
+      '@connuoc/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
+    devDependencies:
+      '@types/node':
+        specifier: 26.5.1
+        version: 26.5.1
+
 packages:
 
   '@borewit/text-codec@0.2.2':
