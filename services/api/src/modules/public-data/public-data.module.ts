@@ -2,6 +2,7 @@ import { Module, type DynamicModule } from '@nestjs/common';
 import type { Pool } from 'pg';
 
 import { DatabaseModule, PG_POOL } from '../../database/database.module.js';
+import { LocationModule } from '../locations/location.module.js';
 import { PublicDataController } from './public-data.controller.js';
 import { PgPublicDataRepository } from './public-data.repository.js';
 import { PublicDataService } from './public-data.service.js';
@@ -18,7 +19,7 @@ export class PublicDataModule {
   static register(options: PublicDataModuleOptions): DynamicModule {
     return {
       module: PublicDataModule,
-      imports: [DatabaseModule.register(options)],
+      imports: [DatabaseModule.register(options), LocationModule.register(options)],
       controllers: [PublicDataController],
       providers: [
         {
