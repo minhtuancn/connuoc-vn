@@ -1,0 +1,23 @@
+{
+  "name": "@connuoc/weather-worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "prepare:deps": "pnpm --filter @connuoc/shared-types build",
+    "prebuild": "pnpm run prepare:deps",
+    "build": "tsc -p tsconfig.json",
+    "pretypecheck": "pnpm run prepare:deps",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pretest": "pnpm run prepare:deps",
+    "test": "vitest run test/*.test.ts"
+  },
+  "dependencies": {
+    "@connuoc/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "26.5.1"
+  }
+}
