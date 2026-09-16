@@ -16,12 +16,11 @@ typedef JsonParser<T> = T Function(Map<String, Object?> json);
 
 class HttpPublicDataRepository implements PublicDataRepository {
   HttpPublicDataRepository({
-    required AppConfig config,
+    required this.config,
     http.Client? client,
     PublicDataClock? clock,
     Duration requestTimeout = const Duration(seconds: 15),
-  }) : _config = config,
-       _client = client ?? http.Client(),
+  }) : _client = client ?? http.Client(),
        _ownsClient = client == null,
        _clock = clock ?? DateTime.now,
        _requestTimeout = requestTimeout {
@@ -34,7 +33,7 @@ class HttpPublicDataRepository implements PublicDataRepository {
     }
   }
 
-  final AppConfig _config;
+  final AppConfig config;
   final http.Client _client;
   final bool _ownsClient;
   final PublicDataClock _clock;
@@ -137,9 +136,9 @@ class HttpPublicDataRepository implements PublicDataRepository {
     List<String> pathSegments, {
     Map<String, String> queryParameters = const {},
   }) {
-    return _config.apiBaseUrl.replace(
+    return config.apiBaseUrl.replace(
       pathSegments: [
-        ..._config.apiBaseUrl.pathSegments.where(
+        ...config.apiBaseUrl.pathSegments.where(
           (segment) => segment.isNotEmpty,
         ),
         'v1',
