@@ -29,10 +29,7 @@ http.Response fixtureResponse(
   return http.Response(
     fixtureText(name),
     statusCode,
-    headers: {
-      'content-type': contentType,
-      'cache-control': cacheControl,
-    },
+    headers: {'content-type': contentType, 'cache-control': cacheControl},
   );
 }
 
@@ -162,10 +159,7 @@ void main() {
       ),
     );
 
-    expect(
-      captured.url.path,
-      '/v1/stations/public-api-station/water-level',
-    );
+    expect(captured.url.path, '/v1/stations/public-api-station/water-level');
     expect(captured.url.queryParameters['limit'], '1');
     expect(captured.url.queryParameters['cursor'], 'next cursor');
     expect(resource.value.items.single.unit, WaterLevelUnit.cm);
