@@ -15,11 +15,8 @@ void _requirePositive(int value, String name) {
 }
 
 class SearchLocationsRequest {
-  SearchLocationsRequest({
-    required String query,
-    this.limit = 20,
-    this.cursor,
-  }) : query = _requireText(query, 'query') {
+  SearchLocationsRequest({required String query, this.limit = 20, this.cursor})
+    : query = _requireText(query, 'query') {
     _requirePositive(limit, 'limit');
   }
 

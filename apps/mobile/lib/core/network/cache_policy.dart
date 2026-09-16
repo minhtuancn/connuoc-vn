@@ -1,8 +1,5 @@
 class CachePolicy {
-  const CachePolicy({
-    required this.maxAge,
-    required this.staleWhileRevalidate,
-  });
+  const CachePolicy({required this.maxAge, required this.staleWhileRevalidate});
 
   factory CachePolicy.parse(String? headerValue) {
     var maxAge = Duration.zero;
