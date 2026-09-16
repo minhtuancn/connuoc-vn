@@ -152,29 +152,81 @@ Android/iOS app có thể dùng thực tế cho lịch con nước cơ bản.
 
 ---
 
-## Phase 5 — Vietnam Coverage
+## Phase 5 — Vietnam Coverage & Weather/Hydrology Intelligence
 
 ### Goal
-Mở rộng dữ liệu theo vùng và đặc điểm sông ngòi Việt Nam.
+Mở rộng theo vùng/lưu vực Việt Nam và bổ sung thời tiết, lượng mưa, dự báo dòng chảy, dự báo nước dâng đã hiệu chỉnh và đánh giá nguy cơ ngập có provenance, uncertainty và giới hạn sử dụng rõ ràng.
 
-### Workstreams
-- Province/commune/location taxonomy.
-- Estuaries and major river networks.
+Epic: #52 — Weather & Hydrology Intelligence.
+
+Design: `docs/superpowers/specs/2026-09-17-weather-hydrology-intelligence-design.md`.
+
+Vietnam taxonomy amendment: `docs/superpowers/specs/2026-09-17-vietnam-administrative-taxonomy-amendment.md`.
+
+### Administrative baseline
+
+Từ 01/07/2025, mô hình chính quyền địa phương hiện hành của Việt Nam là 2 cấp: cấp tỉnh và cấp xã. Phase 5 sử dụng 34 đơn vị cấp tỉnh cùng các xã/phường/đặc khu hiện hành theo mã chính thức. Cấp huyện cũ chỉ được giữ dưới dạng historical/legacy aliases hoặc boundary history để tra cứu dữ liệu cũ; không được trình bày như cấp hành chính hiện hành.
+
+### Workstreams / dependency order
+
+- [ ] #53 Phase 5A — Vietnam location taxonomy + provider platform foundation.
+- [ ] #54 Phase 5B — Multi-provider weather forecasts + normalized public APIs.
+- [ ] #55 Phase 5C — Rainfall observations/history/forecast + accumulation features.
+- [ ] #56 Phase 5D — River network enrichment + GEOGLOWS/GloFAS discharge forecasts.
+- [ ] #57 Phase 5E — Gauge calibration, rating curves + river-rise forecasts.
+- [ ] #58 Phase 5F — Flood-risk engine + hazard/susceptibility baselines.
+- [ ] #59 Phase 5G — Vietnamese official alerts + partner-feed framework.
+- [ ] #60 Phase 5H — Admin provider configuration, health, quota + usage operations.
+- [ ] #61 Phase 5I — Mobile/web weather, river + flood-risk journeys with location UX.
+- [ ] #62 Phase 5J — Pilot calibration, backtesting + Phase 5 exit gate.
+
+Dependency graph:
+
+`#53 → (#54 || #55 || #56 || #59 || #60)`
+
+`#54 + #55 + #56 → #57`
+
+`#55 + #56 + #57 → #58`
+
+`#53 + #54 + #55 + #56 + #58 + #59 → #61`
+
+`#53..#61 → #62`
+
+### Core data/coverage work
+- Current province/city → commune/ward/special-zone taxonomy with effective dates and historical aliases.
+- Estuaries, basins, river reaches and major river networks.
 - Station aliases and historical names.
-- Tide-to-river lag metadata.
+- Tide-to-river lag/calibration metadata where evidence supports it.
 - Weather/rain integration.
 - Regional source adapters.
 - Coverage/confidence map.
+- Multi-provider source policy with free/paid provider configuration in Admin.
+- Provider health, quota/budget, licence/commercial and attribution controls.
+
+### Scientific/safety gates
+- Observed, estimated, forecast, simulated, derived and stale values remain explicitly distinct.
+- Never fabricate stage/water level from discharge.
+- A precise future stage requires provider-native stage with known datum, a validated rating curve, or a locally calibrated model with documented metrics.
+- Numerical flood probability requires an explicitly calibrated probability model and validation set; otherwise expose risk band/confidence/reasons.
+- Official Vietnamese warnings remain separately attributed and are never transformed into an invented internal probability.
+- Coarse/global flood products are hazard/susceptibility baselines, not official street-level inundation maps.
+- Provider credentials stay server-side; public/mobile contracts remain vendor-neutral.
 
 ### Rollout strategy
-1. Pilot area with good data.
-2. Northern delta/estuaries.
-3. Central coast.
-4. Southern delta/coast.
-5. Nationwide station catalogue.
+1. Phase 5A provider/location foundation and source/licence review.
+2. Evidence-rich pilot with weather/rain/discharge data.
+3. Calibrate/backtest station/river-rise/flood-risk only where local observations support it.
+4. Northern delta/estuaries.
+5. Central coast.
+6. Southern delta/coast.
+7. Expand to nationwide coverage while preserving explicit availability/confidence labels.
 
 ### Exit criteria
-- Coverage page clearly says where data is observed, predicted, interpolated or unavailable.
+- Coverage page clearly says where data is observed, predicted, derived/interpolated or unavailable.
+- Multi-provider pipeline has traceable provenance/freshness/licence state.
+- At least one pilot area has reproducible held-out backtesting and documented error bounds.
+- Provider fallback/quota/licence/health failure matrix is verified.
+- No nationwide accuracy claim exceeds validated coverage.
 
 ---
 

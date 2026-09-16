@@ -212,6 +212,9 @@ importers:
 
   services/api:
     dependencies:
+      '@connuoc/geo':
+        specifier: workspace:*
+        version: link:../../packages/geo
       '@connuoc/lunar-calendar':
         specifier: workspace:*
         version: link:../../packages/lunar-calendar
@@ -289,6 +292,16 @@ importers:
       '@types/pg':
         specifier: 8.23.1
         version: 8.23.1
+
+  services/weather-worker:
+    dependencies:
+      '@connuoc/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
+    devDependencies:
+      '@types/node':
+        specifier: 26.5.1
+        version: 26.5.1
 
 packages:
 

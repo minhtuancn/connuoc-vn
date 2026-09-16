@@ -14,25 +14,22 @@ Không được hiển thị các loại này như nhau.
 
 ## Machine-readable source registry
 
-Nguồn đã review trong Phase 1 nằm tại [`data/sources/registry.json`](../data/sources/registry.json). Registry là allowlist về mặt **đánh giá nguồn**, không tự động cấp quyền ingest/redistribute mọi endpoint của nhà cung cấp.
+Nguồn đã review nằm tại [`data/sources/registry.json`](../data/sources/registry.json), được kiểm tra cấu trúc bằng [`data/sources/registry.schema.json`](../data/sources/registry.schema.json). Registry là allowlist về mặt **đánh giá nguồn**, không tự động cấp quyền ingest/redistribute mọi endpoint của nhà cung cấp.
 
-Mỗi nguồn phải có tối thiểu:
+Từ Phase 5, mỗi source có policy machine-checkable riêng cho:
 
 ```text
-id
-name/operator
-jurisdiction/authority
-coverage/kind
-access method
-license status
-redistribution status
-raw-payload retention policy
+policyVersion
+termsReviewedAt
+termsReference
+licenseStatus
+commercialUseStatus
+redistribution
+rawPayloadRetention
 attribution
-vertical datum status
-time semantics
-quality/scientific notes
-review date
 ```
+
+`UNKNOWN` và `APPROVAL_REQUIRED` là trạng thái chặn, không phải giá trị tạm thời được phép bỏ qua trong production.
 
 ## Phase 1 approved source strategy
 
@@ -40,7 +37,7 @@ review date
 
 **Registry id:** `vn-nchmf-tide-bulletins`
 
-NCHMF là nguồn chính thức Việt Nam để đối chiếu các bản tin thủy triều/hải văn. Ví dụ bản tin ngày 15/09/2026 công bố dự báo 10 ngày cho Hòn Dấu, Quy Nhơn và Vũng Tàu cùng thời gian nước lớn/nước ròng.
+NCHMF là nguồn chính thức Việt Nam để đối chiếu các bản tin thủy triều/hải văn.
 
 Policy Phase 1:
 
@@ -51,13 +48,13 @@ Policy Phase 1:
 - datum/unit/time semantics phải xác minh ở cấp product trước khi so sánh numerical level;
 - nếu không xác minh được datum thì chỉ dùng để kiểm tra xu hướng/event-time ở mức phù hợp, không so absolute level như cùng datum.
 
-Lý do policy bảo thủ: trong đợt review Phase 1 không tìm thấy license dữ liệu tái sử dụng rõ ràng ngay trên các trang bulletin đã kiểm tra. Việc trang công khai truy cập được không được coi là quyền redistributable.
+Lý do policy bảo thủ: việc trang công khai truy cập được không được coi là quyền ingest/redistribute/commercial-use. Đến review 2026-09-17, automated machine use vẫn phải ở trạng thái approval-gated nếu chưa có permission/terms cụ thể.
 
 ### 2. NOAA CO-OPS — open harmonic/datum reference for engine validation
 
 **Registry id:** `us-noaa-coops-harmonics`
 
-CO-OPS Metadata API công bố harmonic constituents và datum metadata; constituent record có amplitude, phase GMT/local và speed (degrees/hour). NOAA/NOS nêu phần lớn thông tin NOAA là public domain trừ khi có ghi chú khác và yêu cầu ghi nguồn; NOAA cũng có các tài liệu data-management phát hành CC0/public-domain.
+CO-OPS Metadata API công bố harmonic constituents và datum metadata; constituent record có amplitude, phase GMT/local và speed (degrees/hour). NOAA/NOS nêu phần lớn thông tin NOAA là public domain trừ khi có ghi chú khác và yêu cầu ghi nguồn.
 
 Policy Phase 1:
 
@@ -83,8 +80,51 @@ Golden fixture lịch âm phải lưu factual mapping nhỏ, independently verif
 - source/reference URLs hoặc tài liệu;
 - ngày review;
 - convention UTC+07 / Asia/Ho_Chi_Minh;
-- loại assertion (Tết, tháng nhuận, boundary, Can Chi, tiết khí...);
-- nếu là case khó (tháng nhuận/boundary), ưu tiên ≥2 nguồn độc lập hoặc một nguồn thiên văn/official có phương pháp rõ.
+- loại assertion;
+- nếu là case khó, ưu tiên nhiều nguồn độc lập hoặc nguồn thiên văn/official có phương pháp rõ.
+
+## Phase 5 weather/hydrology provider policy — reviewed 2026-09-17
+
+### Open-Meteo
+
+Ba deployment interpretation được tách thành ba registry record, không gộp làm một source:
+
+- `open-meteo-free-hosted`: hosted free API chỉ dùng cho non-commercial deployment theo terms hiện hành; dữ liệu yêu cầu attribution.
+- `open-meteo-paid-hosted`: customer API có commercial-use entitlement; API key chỉ tồn tại trong secret infrastructure.
+- `open-meteo-self-hosted`: server có thể self-host nhưng vẫn phải tuân thủ license server và attribution/terms của dữ liệu/model upstream thực sự bật.
+
+Không được dùng free hosted endpoint như fallback âm thầm cho production thương mại.
+
+### GEOGLOWS ECMWF Streamflow Service
+
+**Registry id:** `geoglows-ecmwf-streamflow`
+
+GEOGLOWS công bố streamflow-service data theo CC BY 4.0. Adapter phải giữ attribution, model/run metadata và phân biệt rõ retrospective simulation với observation.
+
+Quan trọng: GEOGLOWS trả **discharge/streamflow**, không phải mực nước trạm đã hiệu chỉnh. Không chuyển discharge thành stage/mực nước chính xác nếu chưa có gauge datum + rating curve/calibrated model được validation.
+
+### NASA GPM IMERG
+
+**Registry id:** `nasa-gpm-imerg`
+
+GPM công bố mission data là freely available và yêu cầu citation theo dataset/version. Registry vẫn giữ `commercialUseStatus: UNKNOWN` cho IMERG cho tới khi review thương mại ở cấp product/version được ghi nhận riêng; public availability không được dùng như bằng chứng commercial-use entitlement.
+
+Adapter phải giữ run (`Early`/`Late`/`Final`), version, observation interval, archive/capture timestamp và attribution của exact product dùng.
+
+### NCHMF weather/hydrology candidate
+
+**Registry id:** `vn-nchmf-weather-hydrology-candidate`
+
+Nguồn official Việt Nam được ưu tiên về authoritative warnings, nhưng production ingestion chỉ được enable khi có machine feed/partner API hoặc permission đủ rõ để xác định:
+
+- quyền ingest tự động;
+- commercial-use;
+- redistribution;
+- raw payload retention;
+- attribution;
+- datum/time semantics của từng product/station.
+
+Không dùng unlicensed scraping làm production adapter. Official warning phải được giữ tách biệt với internally-derived flood risk và có precedence cao hơn internal risk messaging khi cùng phạm vi/thời gian.
 
 ## Source promotion states
 
@@ -97,7 +137,18 @@ approved_for_ingestion
 blocked
 ```
 
-Promotion từ source công khai sang `approved_for_fixtures` yêu cầu review cả **rights** và **scientific semantics**. `approved_for_ingestion` là review riêng trong Phase 2 vì còn liên quan rate limit, SLA, parser, retention và monitoring.
+Promotion từ source công khai sang `approved_for_fixtures` yêu cầu review cả **rights** và **scientific semantics**. `approved_for_ingestion` là review riêng vì còn liên quan rate limit, SLA, parser, retention, monitoring và commercial deployment mode.
+
+## Machine policy behavior
+
+`services/weather-worker/src/source-policy.ts` áp dụng fail-closed policy:
+
+- `COMMERCIAL` deployment chỉ nhận source có `commercialUseStatus=ALLOWED`;
+- raw republishing chỉ được phép khi redistribution là `ALLOWED` hoặc `ATTRIBUTION_REQUIRED` **và** raw retention là `ALLOWED` hoặc `ALLOWED_WITH_ATTRIBUTION`;
+- `RESTRICTED`, `UNKNOWN`, `REFERENCE_ONLY`, `APPROVAL_REQUIRED` không được tự động nâng quyền;
+- attribution requirement phải được xử lý ở presentation/export path, không chỉ ghi trong docs.
+
+Provider selector dùng cùng commercial-use policy để tránh implementation drift giữa registry policy và runtime selection.
 
 ## Record-level provenance
 
@@ -106,7 +157,7 @@ Mỗi observation/forecast/derived result phải truy ngược được về:
 - source timestamp,
 - received/imported timestamp,
 - parser version,
-- raw payload checksum/reference (khi retention được phép),
+- raw payload checksum/reference khi retention được phép,
 - quality flags,
 - datum/unit,
 - forecast/model version.
@@ -133,7 +184,7 @@ COMMUNITY_UNVERIFIED
 
 Mỗi source/metric có `freshnessThreshold`. UI phải hiển thị stale state khi quá ngưỡng thay vì tiếp tục dùng dữ liệu cũ như dữ liệu hiện tại.
 
-Drainage engine phải có policy riêng, nghiêm ngặt hơn UI thông thường. Dữ liệu stale/không rõ datum có thể vẫn được hiển thị lịch sử, nhưng phải có khả năng khiến drainage engine trả `INSUFFICIENT_DATA` thay vì recommendation.
+Drainage/flood-risk engine phải có policy riêng, nghiêm ngặt hơn UI thông thường. Dữ liệu stale/không rõ datum có thể vẫn được hiển thị lịch sử, nhưng phải có khả năng khiến engine trả `INSUFFICIENT_DATA` thay vì recommendation.
 
 ## Datum policy
 
@@ -150,23 +201,29 @@ Cần lưu:
 
 ## Raw payload retention
 
-- `redistributable`: có thể lưu raw fixture/payload theo license và retention policy.
-- `validation_only`: mặc định chỉ lưu checksum/reference/citation và assertion tối thiểu; không mirror raw content.
-- `restricted/unknown`: không lưu raw payload trong repo/app nếu chưa có permission.
+Phase 5 machine values:
+
+- `ALLOWED`: có thể lưu raw payload theo source policy.
+- `ALLOWED_WITH_ATTRIBUTION`: có thể lưu/redistribute khi attribution obligations được giữ.
+- `REFERENCE_ONLY`: chỉ lưu checksum/reference/citation và assertion tối thiểu; không mirror raw payload.
+- `APPROVAL_REQUIRED`: không lưu raw payload cho tới khi approval được ghi nhận.
+- `UNKNOWN`: fail closed; không package/republish raw payload.
 
 ## Coverage transparency
 
 Ứng dụng phải có coverage metadata để người dùng biết:
 - khu vực có quan trắc trực tiếp,
-- khu vực chỉ có tide prediction,
-- khu vực suy diễn từ trạm gần nhất,
+- khu vực chỉ có model/forecast,
+- khu vực suy diễn từ trạm/model gần nhất,
 - khu vực chưa đủ dữ liệu.
 
 ## Source onboarding checklist
 
 - [ ] Owner/operator xác định.
-- [ ] Terms/license reviewed.
+- [ ] Terms/license reviewed và `termsReviewedAt` được cập nhật.
+- [ ] Commercial-use status reviewed.
 - [ ] Redistribution rights reviewed.
+- [ ] Raw payload retention reviewed.
 - [ ] Attribution requirement documented.
 - [ ] Datum documented.
 - [ ] Timezone/timestamp semantics documented.
@@ -189,18 +246,22 @@ Cần lưu:
 ## Never do
 
 - Scrape nguồn không rõ quyền sử dụng rồi coi như dữ liệu chính thức.
-- Coi public URL là implicit redistribution license.
-- Bỏ mất datum/timezone.
+- Coi public URL là implicit redistribution/commercial-use license.
+- Bỏ mất datum/timezone/model run/version.
 - Overwrite dữ liệu nguồn bằng community data.
 - Dùng số liệu stale để đưa recommendation mà không cảnh báo.
 - Để AI tự suy ra số liệu còn thiếu rồi ghi như observation.
-- Dùng golden output do chính implementation sinh ra làm "independent validation".
+- Dùng golden output do chính implementation sinh ra làm independent validation.
+- Hạ `UNKNOWN` thành `ALLOWED` chỉ để provider được selector chọn.
 
-## Review references — 2026-09-15
+## Review references — 2026-09-17
 
-- NCHMF current tide bulletins and NCHMF center information.
-- NOAA CO-OPS Metadata API: harmonic constituent/datum definitions.
-- NOAA/National Ocean Service public-domain/copyright guidance and CO-OPS disclaimers.
-- NOAA Data Access/Data Citation directives (CC0/public-domain documents).
+Machine-readable URLs được giữ trong `data/sources/registry.json`. Review 2026-09-17 bao gồm:
 
-URLs and machine-readable policy are retained in the source registry. Source terms must be re-reviewed before production ingestion because external policies can change.
+- Open-Meteo Terms và Pricing: phân biệt Free Hosted non-commercial, Paid Hosted commercial, data attribution và self-hosted server.
+- GEOGLOWS ECMWF Streamflow Service License/Documentation: CC BY 4.0 data, streamflow forecast/retrospective semantics.
+- NASA GPM Data Usage Policy/Data Directory: mission data availability và dataset citation requirements; commercial-use vẫn fail-closed ở registry cho tới product-level review.
+- NCHMF public weather/hydrology pages: authoritative reference nhưng không suy diễn machine-use/redistribution rights khi chưa có terms/permission cụ thể.
+- NOAA CO-OPS metadata/disclaimer references cho Phase 1 tide validation.
+
+Source terms phải được re-review trước production onboarding vì external policies có thể thay đổi.

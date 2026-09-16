@@ -9,12 +9,14 @@ const ROLE_CAPABILITIES = {
     'sources:write',
     'stations:write',
     'imports:annotate',
+    'providers:write',
   ],
   administrator: [
     'admin:read',
     'sources:write',
     'stations:write',
     'imports:annotate',
+    'providers:write',
     'admin:manage',
   ],
 } as const satisfies Readonly<Record<AdminRole, readonly AdminCapability[]>>;

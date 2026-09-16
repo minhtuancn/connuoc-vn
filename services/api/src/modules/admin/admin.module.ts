@@ -6,6 +6,8 @@ import { PgAdminAuthRepository } from './admin-auth.repository.js';
 import { AdminController } from './admin.controller.js';
 import { AdminAuthGuard, AdminCapabilityGuard } from './admin.guards.js';
 import { PgAdminRepository } from './admin.repository.js';
+import { PgProviderConfigRepository } from './provider-config.repository.js';
+import { ProviderConfigService } from './provider-config.service.js';
 
 export interface AdminModuleOptions {
   readonly allowMissingDatabase: boolean;
@@ -28,6 +30,16 @@ export class AdminModule {
           provide: PgAdminRepository,
           useFactory: (pool: Pool | null) => new PgAdminRepository(pool),
           inject: [PG_POOL],
+        },
+        {
+          provide: PgProviderConfigRepository,
+          useFactory: (pool: Pool | null) => new PgProviderConfigRepository(pool),
+          inject: [PG_POOL],
+        },
+        {
+          provide: ProviderConfigService,
+          useFactory: (repository: PgProviderConfigRepository) => new ProviderConfigService(repository),
+          inject: [PgProviderConfigRepository],
         },
         AdminAuthGuard,
         AdminCapabilityGuard,

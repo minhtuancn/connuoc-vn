@@ -9,10 +9,37 @@ if (!databaseUrl) {
 const client = new Client({ connectionString: databaseUrl, application_name: 'connuoc-db-smoke' });
 await client.connect();
 
+async function expectConstraintViolation(name, operation) {
+  await client.query(`SAVEPOINT ${name}`);
+  let rejected = false;
+  try {
+    await operation();
+  } catch (error) {
+    rejected = error && typeof error === 'object' && 'code' in error && ['23505', '23514'].includes(error.code);
+    await client.query(`ROLLBACK TO SAVEPOINT ${name}`);
+  }
+  if (!rejected) {
+    throw new Error(`Expected constraint violation for ${name}.`);
+  }
+}
+
 try {
   const postgis = await client.query('SELECT PostGIS_Version() AS version');
   if (!postgis.rows[0]?.version) {
     throw new Error('PostGIS extension is not available after migrations.');
+  }
+
+  const expectedMigrations = [
+    '0001_phase2_core.sql',
+    '0002_tide_models.sql',
+    '0003_admin_auth.sql',
+    '0004_weather_provider_foundation.sql',
+  ];
+  const appliedMigrations = await client.query(
+    'SELECT migration_name FROM schema_migrations ORDER BY migration_name ASC',
+  );
+  if (JSON.stringify(appliedMigrations.rows.map((row) => row.migration_name)) !== JSON.stringify(expectedMigrations)) {
+    throw new Error('Expected migrations 0001 through 0004 to be applied in deterministic order.');
   }
 
   const expectedTables = [
@@ -29,6 +56,12 @@ try {
     'tide_constituents',
     'admin_principals',
     'admin_api_tokens',
+    'administrative_areas',
+    'administrative_area_aliases',
+    'administrative_area_successors',
+    'provider_configs',
+    'provider_capabilities',
+    'provider_health_events',
   ];
   const tables = await client.query(
     `SELECT table_name FROM information_schema.tables
@@ -37,6 +70,17 @@ try {
   );
   if (tables.rowCount !== expectedTables.length) {
     throw new Error(`Expected ${expectedTables.length} core tables, found ${tables.rowCount ?? 0}.`);
+  }
+
+  const forbiddenCredentialColumns = await client.query(
+    `SELECT column_name FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'provider_configs'
+       AND lower(column_name) = ANY($1::text[])`,
+    [['api_key', 'apikey', 'token', 'password', 'secret_value']],
+  );
+  if ((forbiddenCredentialColumns.rowCount ?? 0) !== 0) {
+    throw new Error('Provider config schema contains raw credential-like columns.');
   }
 
   await client.query('BEGIN');
@@ -73,6 +117,86 @@ try {
     if (nearby.rowCount !== 1 || nearby.rows[0].public_id !== 'ci-station') {
       throw new Error('PostGIS spatial proximity query did not return the fixture station.');
     }
+
+    const province = await client.query(
+      `INSERT INTO administrative_areas (
+         public_id, official_code, name, normalized_name, area_kind,
+         effective_from, is_current, geometry, geometry_source_id
+       ) VALUES (
+         'area:ci:province', '31', 'CI Province', 'ci province', 'PROVINCE',
+         DATE '2025-07-01', true,
+         ST_Multi(ST_GeomFromText('POLYGON((105 20,106 20,106 21,105 21,105 20))', 4326)),
+         $1
+       ) RETURNING id`,
+      [sourceId],
+    );
+    const provinceId = province.rows[0].id;
+
+    await expectConstraintViolation('historical_current', () => client.query(
+      `INSERT INTO administrative_areas (
+         public_id, official_code, name, normalized_name, area_kind, effective_from, is_current
+       ) VALUES ('area:ci:legacy-district', 'LEGACY-1', 'Legacy District', 'legacy district',
+         'HISTORICAL_DISTRICT', DATE '2020-01-01', true)`,
+    ));
+
+    await expectConstraintViolation('invalid_effective_range', () => client.query(
+      `INSERT INTO administrative_areas (
+         public_id, official_code, name, normalized_name, area_kind,
+         effective_from, effective_to, is_current
+       ) VALUES ('area:ci:invalid-range', 'BAD-RANGE', 'Bad Range', 'bad range', 'COMMUNE',
+         DATE '2026-09-18', DATE '2026-09-17', false)`,
+    ));
+
+    await expectConstraintViolation('self_parent', () => client.query(
+      'UPDATE administrative_areas SET parent_id = id WHERE id = $1',
+      [provinceId],
+    ));
+
+    await expectConstraintViolation('duplicate_current_official_code', () => client.query(
+      `INSERT INTO administrative_areas (
+         public_id, official_code, name, normalized_name, area_kind, effective_from, is_current
+       ) VALUES ('area:ci:duplicate-code', '31', 'Duplicate Code', 'duplicate code', 'PROVINCE',
+         DATE '2025-07-01', true)`,
+    ));
+
+    const provider = await client.query(
+      `INSERT INTO provider_configs (
+         provider_key, data_source_id, provider_type, enabled, priority, weight,
+         commercial_use_status, redistribution_status, licence_status, health_state,
+         health_blocks_selection, secret_ref
+       ) VALUES (
+         'ci-weather', $1, 'fixture', true, 100, 1,
+         'ALLOWED', 'ATTRIBUTION_REQUIRED', 'REVIEWED', 'HEALTHY', false,
+         'secret://ci/weather'
+       ) RETURNING id`,
+      [sourceId],
+    );
+    const providerId = provider.rows[0].id;
+
+    await client.query(
+      `INSERT INTO provider_capabilities (provider_config_id, capability, enabled)
+       VALUES ($1, 'weather.current', true)`,
+      [providerId],
+    );
+    await client.query(
+      `INSERT INTO provider_health_events (provider_config_id, state, latency_ms)
+       VALUES ($1, 'HEALTHY', 25)`,
+      [providerId],
+    );
+
+    await expectConstraintViolation('empty_provider_key', () => client.query(
+      `INSERT INTO provider_configs (
+         provider_key, provider_type, commercial_use_status, redistribution_status,
+         licence_status, health_state
+       ) VALUES ('   ', 'fixture', 'ALLOWED', 'ALLOWED', 'REVIEWED', 'HEALTHY')`,
+    ));
+
+    await expectConstraintViolation('invalid_provider_status', () => client.query(
+      `INSERT INTO provider_configs (
+         provider_key, provider_type, commercial_use_status, redistribution_status,
+         licence_status, health_state
+       ) VALUES ('ci-invalid-status', 'fixture', 'MAYBE', 'ALLOWED', 'REVIEWED', 'HEALTHY')`,
+    ));
 
     const tideModel = await client.query(
       `INSERT INTO tide_models (
@@ -159,8 +283,11 @@ try {
     postgisVersion: postgis.rows[0].version,
     checkedTables: expectedTables.length,
     checks: [
-      'empty-db-migration',
+      'migration-order-0001-through-0004',
       'spatial-query',
+      'administrative-area-constraints',
+      'provider-policy-schema',
+      'provider-secret-column-redaction',
       'harmonic-tide-model-schema',
       'admin-token-hash-schema',
       'raw-payload-idempotency-constraint',

@@ -5,6 +5,7 @@ export type AdminCapability =
   | 'sources:write'
   | 'stations:write'
   | 'imports:annotate'
+  | 'providers:write'
   | 'admin:manage';
 
 export interface AdminActor {
