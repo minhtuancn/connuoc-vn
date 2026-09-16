@@ -55,10 +55,8 @@ class CachedPublicDataRepository implements PublicDataRepository {
       resourceKey: cacheKeyForStation(stationId),
       resourceKind: 'station',
       loadCached: () => _cacheStore.getStation(stationId),
-      loadRemote: () => _remote.getStation(
-        stationId,
-        cancellation: cancellation,
-      ),
+      loadRemote: () =>
+          _remote.getStation(stationId, cancellation: cancellation),
       loadRemoteInBackground: () => _remote.getStation(stationId),
       saveCached: _cacheStore.putStation,
     );

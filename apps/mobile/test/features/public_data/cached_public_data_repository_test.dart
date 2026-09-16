@@ -62,7 +62,8 @@ class FakeCacheStore implements PublicDataCacheStore {
   ) async {}
 
   @override
-  Future<RemoteResource<TideSeries>?> getTide(TideRequest request) async => null;
+  Future<RemoteResource<TideSeries>?> getTide(TideRequest request) async =>
+      null;
 
   @override
   Future<void> putTide(
@@ -82,8 +83,9 @@ class FakeCacheStore implements PublicDataCacheStore {
   ) async {}
 
   @override
-  Future<RemoteResource<CalendarDay>?> getCalendar(CalendarRequest request) async =>
-      null;
+  Future<RemoteResource<CalendarDay>?> getCalendar(
+    CalendarRequest request,
+  ) async => null;
 
   @override
   Future<void> putCalendar(
@@ -98,7 +100,8 @@ class FakeRemoteRepository implements PublicDataRepository {
   Future<RemoteResource<StationDetails>> Function(
     String stationId,
     RequestCancellation? cancellation,
-  )? onGetStation;
+  )?
+  onGetStation;
 
   @override
   Future<RemoteResource<StationDetails>> getStation(
@@ -213,27 +216,30 @@ void main() {
     expect(sync.attempts, isEmpty);
   });
 
-  test('stale cache returns immediately and refreshes once in background', () async {
-    final old = resource(
-      station,
-      fetchedAtUtc: now.subtract(const Duration(minutes: 15)),
-    );
-    final refreshed = resource(updatedStation, fetchedAtUtc: now);
-    final refreshGate = Completer<RemoteResource<StationDetails>>();
-    cache.station = old;
-    remote.onGetStation = (_, _) => refreshGate.future;
+  test(
+    'stale cache returns immediately and refreshes once in background',
+    () async {
+      final old = resource(
+        station,
+        fetchedAtUtc: now.subtract(const Duration(minutes: 15)),
+      );
+      final refreshed = resource(updatedStation, fetchedAtUtc: now);
+      final refreshGate = Completer<RemoteResource<StationDetails>>();
+      cache.station = old;
+      remote.onGetStation = (_, _) => refreshGate.future;
 
-    final result = await repository.getStation(station.id);
+      final result = await repository.getStation(station.id);
 
-    expect(identical(result, old), isTrue);
-    expect(remote.stationCalls, 1);
-    refreshGate.complete(refreshed);
-    await Future<void>.delayed(Duration.zero);
-    await Future<void>.delayed(Duration.zero);
-    expect(cache.station?.value.name, 'Public API Station Updated');
-    expect(cache.stationPutCount, 1);
-    expect(sync.successes, [cacheKeyForStation(station.id)]);
-  });
+      expect(identical(result, old), isTrue);
+      expect(remote.stationCalls, 1);
+      refreshGate.complete(refreshed);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(cache.station?.value.name, 'Public API Station Updated');
+      expect(cache.stationPutCount, 1);
+      expect(sync.successes, [cacheKeyForStation(station.id)]);
+    },
+  );
 
   test('two concurrent stale reads share one background refresh', () async {
     final old = resource(
@@ -257,41 +263,46 @@ void main() {
     await Future<void>.delayed(Duration.zero);
   });
 
-  test('expired cache uses successful remote response and replaces cache', () async {
-    final old = resource(
-      station,
-      fetchedAtUtc: now.subtract(const Duration(minutes: 31)),
-    );
-    final refreshed = resource(updatedStation, fetchedAtUtc: now);
-    cache.station = old;
-    remote.onGetStation = (_, _) async => refreshed;
+  test(
+    'expired cache uses successful remote response and replaces cache',
+    () async {
+      final old = resource(
+        station,
+        fetchedAtUtc: now.subtract(const Duration(minutes: 31)),
+      );
+      final refreshed = resource(updatedStation, fetchedAtUtc: now);
+      cache.station = old;
+      remote.onGetStation = (_, _) async => refreshed;
 
-    final result = await repository.getStation(station.id);
+      final result = await repository.getStation(station.id);
 
-    expect(identical(result, refreshed), isTrue);
-    expect(cache.station?.value.name, 'Public API Station Updated');
-    expect(cache.stationPutCount, 1);
-    expect(sync.attempts, [cacheKeyForStation(station.id)]);
-    expect(sync.successes, [cacheKeyForStation(station.id)]);
-  });
+      expect(identical(result, refreshed), isTrue);
+      expect(cache.station?.value.name, 'Public API Station Updated');
+      expect(cache.stationPutCount, 1);
+      expect(sync.attempts, [cacheKeyForStation(station.id)]);
+      expect(sync.successes, [cacheKeyForStation(station.id)]);
+    },
+  );
 
-  test('expired cache falls back to last known good when remote fails', () async {
-    final old = resource(
-      station,
-      fetchedAtUtc: now.subtract(const Duration(minutes: 31)),
-    );
-    cache.station = old;
-    remote.onGetStation = (_, _) async => throw const ApiFailure(
-      kind: ApiFailureKind.network,
-    );
+  test(
+    'expired cache falls back to last known good when remote fails',
+    () async {
+      final old = resource(
+        station,
+        fetchedAtUtc: now.subtract(const Duration(minutes: 31)),
+      );
+      cache.station = old;
+      remote.onGetStation = (_, _) async =>
+          throw const ApiFailure(kind: ApiFailureKind.network);
 
-    final result = await repository.getStation(station.id);
+      final result = await repository.getStation(station.id);
 
-    expect(identical(result, old), isTrue);
-    expect(result.fetchedAtUtc, old.fetchedAtUtc);
-    expect(cache.stationPutCount, 0);
-    expect(sync.failures.single, contains('network'));
-  });
+      expect(identical(result, old), isTrue);
+      expect(result.fetchedAtUtc, old.fetchedAtUtc);
+      expect(cache.stationPutCount, 0);
+      expect(sync.failures.single, contains('network'));
+    },
+  );
 
   test('no cache propagates remote failure', () async {
     remote.onGetStation = (_, _) async => throw const ApiFailure(
@@ -318,9 +329,8 @@ void main() {
       fetchedAtUtc: now.subtract(const Duration(minutes: 31)),
     );
     cache.station = old;
-    remote.onGetStation = (_, _) async => throw const ApiFailure(
-      kind: ApiFailureKind.malformedResponse,
-    );
+    remote.onGetStation = (_, _) async =>
+        throw const ApiFailure(kind: ApiFailureKind.malformedResponse);
 
     final result = await repository.getStation(station.id);
 

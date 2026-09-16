@@ -14,17 +14,23 @@ class DriftSyncStateStore implements SyncStateStore {
     required DateTime atUtc,
   }) async {
     final existing = await _get(resourceKey);
-    await _database.into(_database.syncStates).insertOnConflictUpdate(
-      SyncStatesCompanion.insert(
-        resourceKey: resourceKey,
-        resourceKind: resourceKind,
-        lastAttemptAtUtc: Value(atUtc.toUtc()),
-        lastSuccessfulRefreshAtUtc: Value(existing?.lastSuccessfulRefreshAtUtc),
-        lastFailureKind: Value(existing?.lastFailureKind),
-        latestRemoteGeneratedAtUtc: Value(existing?.latestRemoteGeneratedAtUtc),
-        latestObservedAtUtc: Value(existing?.latestObservedAtUtc),
-      ),
-    );
+    await _database
+        .into(_database.syncStates)
+        .insertOnConflictUpdate(
+          SyncStatesCompanion.insert(
+            resourceKey: resourceKey,
+            resourceKind: resourceKind,
+            lastAttemptAtUtc: Value(atUtc.toUtc()),
+            lastSuccessfulRefreshAtUtc: Value(
+              existing?.lastSuccessfulRefreshAtUtc,
+            ),
+            lastFailureKind: Value(existing?.lastFailureKind),
+            latestRemoteGeneratedAtUtc: Value(
+              existing?.latestRemoteGeneratedAtUtc,
+            ),
+            latestObservedAtUtc: Value(existing?.latestObservedAtUtc),
+          ),
+        );
   }
 
   @override
@@ -37,22 +43,24 @@ class DriftSyncStateStore implements SyncStateStore {
   }) async {
     final existing = await _get(resourceKey);
     final successAt = atUtc.toUtc();
-    await _database.into(_database.syncStates).insertOnConflictUpdate(
-      SyncStatesCompanion.insert(
-        resourceKey: resourceKey,
-        resourceKind: resourceKind,
-        lastAttemptAtUtc: Value(successAt),
-        lastSuccessfulRefreshAtUtc: Value(successAt),
-        lastFailureKind: const Value(null),
-        latestRemoteGeneratedAtUtc: Value(
-          latestRemoteGeneratedAtUtc?.toUtc() ??
-              existing?.latestRemoteGeneratedAtUtc,
-        ),
-        latestObservedAtUtc: Value(
-          latestObservedAtUtc?.toUtc() ?? existing?.latestObservedAtUtc,
-        ),
-      ),
-    );
+    await _database
+        .into(_database.syncStates)
+        .insertOnConflictUpdate(
+          SyncStatesCompanion.insert(
+            resourceKey: resourceKey,
+            resourceKind: resourceKind,
+            lastAttemptAtUtc: Value(successAt),
+            lastSuccessfulRefreshAtUtc: Value(successAt),
+            lastFailureKind: const Value(null),
+            latestRemoteGeneratedAtUtc: Value(
+              latestRemoteGeneratedAtUtc?.toUtc() ??
+                  existing?.latestRemoteGeneratedAtUtc,
+            ),
+            latestObservedAtUtc: Value(
+              latestObservedAtUtc?.toUtc() ?? existing?.latestObservedAtUtc,
+            ),
+          ),
+        );
   }
 
   @override
@@ -63,17 +71,23 @@ class DriftSyncStateStore implements SyncStateStore {
     required String failureKind,
   }) async {
     final existing = await _get(resourceKey);
-    await _database.into(_database.syncStates).insertOnConflictUpdate(
-      SyncStatesCompanion.insert(
-        resourceKey: resourceKey,
-        resourceKind: resourceKind,
-        lastAttemptAtUtc: Value(atUtc.toUtc()),
-        lastSuccessfulRefreshAtUtc: Value(existing?.lastSuccessfulRefreshAtUtc),
-        lastFailureKind: Value(failureKind),
-        latestRemoteGeneratedAtUtc: Value(existing?.latestRemoteGeneratedAtUtc),
-        latestObservedAtUtc: Value(existing?.latestObservedAtUtc),
-      ),
-    );
+    await _database
+        .into(_database.syncStates)
+        .insertOnConflictUpdate(
+          SyncStatesCompanion.insert(
+            resourceKey: resourceKey,
+            resourceKind: resourceKind,
+            lastAttemptAtUtc: Value(atUtc.toUtc()),
+            lastSuccessfulRefreshAtUtc: Value(
+              existing?.lastSuccessfulRefreshAtUtc,
+            ),
+            lastFailureKind: Value(failureKind),
+            latestRemoteGeneratedAtUtc: Value(
+              existing?.latestRemoteGeneratedAtUtc,
+            ),
+            latestObservedAtUtc: Value(existing?.latestObservedAtUtc),
+          ),
+        );
   }
 
   Future<SyncState?> _get(String resourceKey) {
