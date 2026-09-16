@@ -51,11 +51,7 @@ String readString(Map<String, Object?> json, String key, String path) {
   _fail('$path.$key', 'expected a string');
 }
 
-String? readNullableString(
-  Map<String, Object?> json,
-  String key,
-  String path,
-) {
+String? readNullableString(Map<String, Object?> json, String key, String path) {
   final value = readRequired(json, key, path);
   if (value == null || value is String) {
     return value as String?;
@@ -107,8 +103,8 @@ DateTime? readNullableInstant(
 }
 
 DateTime parseInstant(String value, String path) {
-  final hasExplicitZone = value.endsWith('Z') ||
-      RegExp(r'[+-]\d{2}:\d{2}$').hasMatch(value);
+  final hasExplicitZone =
+      value.endsWith('Z') || RegExp(r'[+-]\d{2}:\d{2}$').hasMatch(value);
   if (!hasExplicitZone) {
     _fail(path, 'instant must include an explicit UTC offset');
   }

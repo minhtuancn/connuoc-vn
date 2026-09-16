@@ -153,7 +153,10 @@ class LocationSummary {
 }
 
 class SearchPageMeta {
-  const SearchPageMeta({required this.generatedAtUtc, required this.nextCursor});
+  const SearchPageMeta({
+    required this.generatedAtUtc,
+    required this.nextCursor,
+  });
 
   factory SearchPageMeta.fromJson(Map<String, Object?> json) {
     return SearchPageMeta(
@@ -297,10 +300,7 @@ class WaterLevelObservation {
       datumId: readNullableString(json, 'datumId', path),
       qualityState: _readQualityState(json, 'qualityState', path),
       provenance: ObservationProvenance.fromJson(
-        readObject(
-          readRequired(json, 'provenance', path),
-          '$path.provenance',
-        ),
+        readObject(readRequired(json, 'provenance', path), '$path.provenance'),
         path: '$path.provenance',
       ),
     );
@@ -431,11 +431,7 @@ class TideSeries {
       datumId: readString(meta, 'datumId', r'$.meta'),
       unit: _readWaterLevelUnit(meta, 'unit', r'$.meta'),
       timeZone: readString(meta, 'timeZone', r'$.meta'),
-      phaseConvention: _readPhaseConvention(
-        meta,
-        'phaseConvention',
-        r'$.meta',
-      ),
+      phaseConvention: _readPhaseConvention(meta, 'phaseConvention', r'$.meta'),
       referenceEpochUtc: readInstant(meta, 'referenceEpochUtc', r'$.meta'),
       constituentCount: readInt(meta, 'constituentCount', r'$.meta'),
       provenance: ModelProvenance.fromJson(
