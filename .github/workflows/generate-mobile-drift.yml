@@ -11,6 +11,9 @@ permissions:
 jobs:
   generate:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
     steps:
       - uses: actions/checkout@v5
         with:
@@ -24,21 +27,35 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Resolve dependencies and generate Drift artifacts
-        working-directory: apps/mobile
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Generate Drift Dart code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Prepare schema directory
         run: |
-          set -euo pipefail
-          flutter pub get
-          dart run build_runner build --delete-conflicting-outputs
           mkdir -p drift_schemas
           rm -f drift_schemas/drift_schema_v1.json drift_schemas/drift_schema_v2.json drift_schemas/version1.sqlite
-          dart run drift_dev schema dump lib/core/database/app_database.dart drift_schemas/
-          dart run tool/create_v1_schema_fixture.dart drift_schemas/version1.sqlite
-          dart run drift_dev schema dump drift_schemas/version1.sqlite drift_schemas/drift_schema_v1.json
-          rm -f drift_schemas/version1.sqlite
-          dart run drift_dev schema steps drift_schemas/ lib/core/database/schema_versions.dart
+
+      - name: Dump current v2 schema
+        run: dart run drift_dev schema dump lib/core/database/app_database.dart drift_schemas/
+
+      - name: Create v1 SQLite fixture
+        run: dart run tool/create_v1_schema_fixture.dart drift_schemas/version1.sqlite
+
+      - name: Dump v1 schema
+        run: dart run drift_dev schema dump drift_schemas/version1.sqlite drift_schemas/drift_schema_v1.json
+
+      - name: Remove temporary v1 SQLite fixture
+        if: always()
+        run: rm -f drift_schemas/version1.sqlite
+
+      - name: Generate migration schema helper
+        run: dart run drift_dev schema steps drift_schemas/ lib/core/database/schema_versions.dart
 
       - name: Commit generated output
+        working-directory: .
         run: |
           set -euo pipefail
           git add apps/mobile/pubspec.lock \
