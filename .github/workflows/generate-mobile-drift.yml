@@ -36,15 +36,46 @@ jobs:
       - name: Prepare schema directory
         run: |
           mkdir -p drift_schemas
-          rm -f drift_schemas/drift_schema_v1.json drift_schemas/drift_schema_v2.json drift_schemas/version1.sqlite
+          rm -f drift_schemas/drift_schema_v1.json \
+            drift_schemas/drift_schema_v2.json \
+            drift_schemas/version1.sqlite \
+            drift_schemas/v1-fixture-diagnostic.txt
 
       - name: Dump current v2 schema
         run: dart run drift_dev schema dump lib/core/database/app_database.dart drift_schemas/
 
-      - name: Create v1 SQLite fixture
-        run: dart run tool/create_v1_schema_fixture.dart drift_schemas/version1.sqlite
+      - name: Create v1 SQLite fixture with diagnostic capture
+        id: v1_fixture
+        shell: bash
+        run: |
+          set +e
+          dart run tool/create_v1_schema_fixture.dart drift_schemas/version1.sqlite \
+            > drift_schemas/v1-fixture-diagnostic.txt 2>&1
+          status=$?
+          cat drift_schemas/v1-fixture-diagnostic.txt
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Commit v1 fixture diagnostic on failure
+        if: steps.v1_fixture.outputs.status != '0'
+        working-directory: .
+        run: |
+          set -euo pipefail
+          git add apps/mobile/drift_schemas/v1-fixture-diagnostic.txt
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'chore(mobile): capture Drift v1 fixture failure'
+            git push origin HEAD:phase-3/mobile-offline-persistence
+          fi
+          exit 1
+
+      - name: Remove fixture diagnostic after success
+        if: steps.v1_fixture.outputs.status == '0'
+        run: rm -f drift_schemas/v1-fixture-diagnostic.txt
 
       - name: Dump v1 schema
+        if: steps.v1_fixture.outputs.status == '0'
         run: dart run drift_dev schema dump drift_schemas/version1.sqlite drift_schemas/drift_schema_v1.json
 
       - name: Remove temporary v1 SQLite fixture
@@ -52,9 +83,11 @@ jobs:
         run: rm -f drift_schemas/version1.sqlite
 
       - name: Generate migration schema helper
+        if: steps.v1_fixture.outputs.status == '0'
         run: dart run drift_dev schema steps drift_schemas/ lib/core/database/schema_versions.dart
 
       - name: Commit generated output
+        if: steps.v1_fixture.outputs.status == '0'
         working-directory: .
         run: |
           set -euo pipefail
