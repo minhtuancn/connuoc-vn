@@ -1,3 +1,4 @@
+// Task 5 contract: validated pack replacement must be atomic and rollback-safe.
 import 'package:connuoc_viet/core/database/app_database.dart';
 import 'package:connuoc_viet/core/database/cache_key.dart';
 import 'package:connuoc_viet/core/network/cache_policy.dart';
