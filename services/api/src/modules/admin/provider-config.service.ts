@@ -1,5 +1,5 @@
 import type { AdminMutationContext } from './admin.repository.js';
-import { PgProviderConfigRepository } from './provider-config.repository.js';
+import type { PgProviderConfigRepository } from './provider-config.repository.js';
 import type { ProviderConfigWrite, ProviderStatusPatch } from './provider-config.types.js';
 
 export type ProviderConfigPolicyErrorCode = 'LICENCE_BLOCKED';
