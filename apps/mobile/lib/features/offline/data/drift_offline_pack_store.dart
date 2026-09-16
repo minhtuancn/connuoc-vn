@@ -5,6 +5,7 @@ import 'package:connuoc_viet/core/database/app_database.dart' as db;
 import 'package:connuoc_viet/features/offline/data/offline_pack_store.dart';
 import 'package:connuoc_viet/features/offline/domain/offline_pack.dart';
 import 'package:connuoc_viet/features/public_data/data/drift_public_data_cache_store.dart';
+import 'package:drift/drift.dart' show OrderingTerm;
 
 class DriftOfflinePackStore implements OfflinePackStore {
   DriftOfflinePackStore(
@@ -21,7 +22,7 @@ class DriftOfflinePackStore implements OfflinePackStore {
   Future<List<OfflinePackManifest>> listManifests() async {
     final rows = await (_database.select(
       _database.offlineManifests,
-    )..orderBy([(table) => db.OrderingTerm.asc(table.packId)])).get();
+    )..orderBy([(table) => OrderingTerm.asc(table.packId)])).get();
     return rows.map(_manifestFromRow).toList(growable: false);
   }
 
@@ -136,9 +137,13 @@ String _encodeCanonicalMap(Map<String, Object?> value) {
 
 Object? _canonicalJsonValue(Object? value) {
   if (value is Map) {
-    final keys = value.keys.map((key) => key.toString()).toList()..sort();
+    final entries = value.entries
+        .map((entry) => MapEntry(entry.key.toString(), entry.value))
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
     return <String, Object?>{
-      for (final key in keys) key: _canonicalJsonValue(value[key]),
+      for (final entry in entries)
+        entry.key: _canonicalJsonValue(entry.value),
     };
   }
   if (value is Iterable) {
