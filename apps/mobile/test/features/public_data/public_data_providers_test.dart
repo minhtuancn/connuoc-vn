@@ -70,22 +70,25 @@ void main() {
     expect(container.read(publicDataRepositoryProvider), same(fake));
   });
 
-  test('default repository is built from overridden config and HTTP client', () {
-    final config = AppConfig(
-      apiBaseUrl: Uri.parse('https://mobile-api.example.test/base'),
-    );
-    final client = NoRequestClient();
-    final container = ProviderContainer(
-      overrides: [
-        appConfigProvider.overrideWithValue(config),
-        httpClientProvider.overrideWithValue(client),
-      ],
-    );
-    addTearDown(container.dispose);
+  test(
+    'default repository is built from overridden config and HTTP client',
+    () {
+      final config = AppConfig(
+        apiBaseUrl: Uri.parse('https://mobile-api.example.test/base'),
+      );
+      final client = NoRequestClient();
+      final container = ProviderContainer(
+        overrides: [
+          appConfigProvider.overrideWithValue(config),
+          httpClientProvider.overrideWithValue(client),
+        ],
+      );
+      addTearDown(container.dispose);
 
-    final repository = container.read(publicDataRepositoryProvider);
+      final repository = container.read(publicDataRepositoryProvider);
 
-    expect(repository, isA<HttpPublicDataRepository>());
-    expect((repository as HttpPublicDataRepository).config, same(config));
-  });
+      expect(repository, isA<HttpPublicDataRepository>());
+      expect((repository as HttpPublicDataRepository).config, same(config));
+    },
+  );
 }
