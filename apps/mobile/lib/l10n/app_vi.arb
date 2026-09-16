@@ -1,0 +1,14 @@
+{
+  "@@locale": "vi",
+  "appTitle": "Con Nước Việt",
+  "bootstrapHeading": "Lịch con nước Việt Nam",
+  "bootstrapDescription": "Nền tảng di động đang sẵn sàng cho dữ liệu thủy triều, mực nước và lịch Việt.",
+  "configuredApiLabel": "Máy chủ API: {host}",
+  "@configuredApiLabel": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  }
+}
