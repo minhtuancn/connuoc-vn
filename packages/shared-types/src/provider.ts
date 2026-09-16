@@ -26,13 +26,13 @@ export type ProviderCapability = z.infer<typeof ProviderCapabilitySchema>;
 export const CommercialUseStatusSchema = z.enum(['ALLOWED', 'RESTRICTED', 'UNKNOWN']);
 export type CommercialUseStatus = z.infer<typeof CommercialUseStatusSchema>;
 
-export const RedistributionStatusSchema = z.enum([
+export const ProviderRedistributionStatusSchema = z.enum([
   'ALLOWED',
   'RESTRICTED',
   'ATTRIBUTION_REQUIRED',
   'UNKNOWN',
 ]);
-export type RedistributionStatus = z.infer<typeof RedistributionStatusSchema>;
+export type ProviderRedistributionStatus = z.infer<typeof ProviderRedistributionStatusSchema>;
 
 export const ProviderHealthStateSchema = z.enum([
   'HEALTHY',
