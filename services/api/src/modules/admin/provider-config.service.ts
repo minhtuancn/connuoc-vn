@@ -26,7 +26,7 @@ export class ProviderConfigService {
     return this.repository.getProvider(providerKey);
   }
 
-  put(
+  async put(
     providerKey: string,
     input: ProviderConfigWrite,
     context: AdminMutationContext,
