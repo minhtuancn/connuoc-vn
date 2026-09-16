@@ -4,10 +4,8 @@ import {
   ProviderConfigWriteSchema,
   ProviderStatusPatchSchema,
 } from '../src/modules/admin/provider-config.types.js';
-import {
-  ProviderConfigPolicyError,
-  ProviderConfigService,
-} from '../src/modules/admin/provider-config.service.js';
+import { ProviderConfigService } from '../src/modules/admin/provider-config.service.js';
+import type { ProviderConfigPolicyError } from '../src/modules/admin/provider-config.service.js';
 import type { PgProviderConfigRepository } from '../src/modules/admin/provider-config.repository.js';
 
 const validWrite = {
