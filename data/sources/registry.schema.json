@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://go7s.net/schemas/connuoc/source-registry-v2.json",
+  "title": "Con Nuoc Viet Source Registry",
+  "type": "object",
+  "required": ["schemaVersion", "reviewedAt", "sources"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 2 },
+    "reviewedAt": { "type": "string", "format": "date" },
+    "sources": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/source" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "source": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "operator",
+        "jurisdiction",
+        "authority",
+        "kind",
+        "accessMethod",
+        "policyVersion",
+        "termsReviewedAt",
+        "termsReference",
+        "licenseStatus",
+        "commercialUseStatus",
+        "redistribution",
+        "rawPayloadRetention",
+        "attribution",
+        "notes"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "operator": { "type": "string", "minLength": 1 },
+        "jurisdiction": { "type": "string", "minLength": 1 },
+        "authority": { "type": "string", "minLength": 1 },
+        "kind": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "homepageUrl": { "type": "string" },
+        "apiDocumentationUrl": { "type": "string" },
+        "accessMethod": { "type": "string", "minLength": 1 },
+        "policyVersion": { "type": "integer", "minimum": 1 },
+        "termsReviewedAt": { "type": "string", "format": "date" },
+        "termsReference": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "licenseStatus": { "type": "string", "minLength": 1 },
+        "commercialUseStatus": {
+          "enum": ["ALLOWED", "RESTRICTED", "UNKNOWN"]
+        },
+        "redistribution": {
+          "enum": ["ALLOWED", "RESTRICTED", "ATTRIBUTION_REQUIRED", "UNKNOWN"]
+        },
+        "rawPayloadRetention": {
+          "enum": [
+            "ALLOWED",
+            "ALLOWED_WITH_ATTRIBUTION",
+            "REFERENCE_ONLY",
+            "APPROVAL_REQUIRED",
+            "UNKNOWN"
+          ]
+        },
+        "attribution": { "type": "string", "minLength": 1 },
+        "datumStatus": { "type": "string" },
+        "timeSemantics": { "type": "string" },
+        "notes": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

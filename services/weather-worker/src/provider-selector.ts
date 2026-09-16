@@ -5,6 +5,8 @@ import type {
   ProviderSelectionRequest,
 } from '@connuoc/shared-types';
 
+import { isDeploymentAllowed } from './source-policy.js';
+
 export type ProviderRejectionCode =
   | 'DISABLED'
   | 'CAPABILITY_UNSUPPORTED'
@@ -63,8 +65,10 @@ function rejectionCodes(
   if (!config.capabilities.includes(request.capability)) reasons.push('CAPABILITY_UNSUPPORTED');
   if (!config.coversLocation) reasons.push('OUTSIDE_COVERAGE');
   if (
-    request.deploymentUse === 'COMMERCIAL' &&
-    config.commercialUseStatus !== 'ALLOWED'
+    !isDeploymentAllowed(
+      { commercialUseStatus: config.commercialUseStatus },
+      request.deploymentUse,
+    )
   ) {
     reasons.push('LICENCE_BLOCKED');
   }
