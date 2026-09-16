@@ -1,0 +1,31 @@
+{
+  "station": {
+    "id": "public-api-station",
+    "name": "Public API Fixture Station",
+    "timeZone": "Asia/Ho_Chi_Minh",
+    "defaultDatumId": "local-gauge-fixture"
+  },
+  "items": [
+    {
+      "sourceRecordKey": "public-api-obs-2",
+      "observedAt": "2026-09-15T01:00:00.000Z",
+      "value": 130.2,
+      "unit": "cm",
+      "datumId": "local-gauge-fixture",
+      "qualityState": "GOOD",
+      "provenance": {
+        "sourceKey": "public-api-fixture",
+        "importRunId": "11111111-1111-1111-1111-111111111111",
+        "rawChecksumSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "parserVersion": "fixture-parser@1",
+        "normalizerVersion": "fixture-normalizer@1",
+        "observedAt": "2026-09-15T01:00:00.000Z"
+      }
+    }
+  ],
+  "meta": {
+    "generatedAt": "2026-09-15T02:00:00.000Z",
+    "latestObservedAt": "2026-09-15T01:00:00.000Z",
+    "nextCursor": "eyJvZmZzZXQiOjF9"
+  }
+}
