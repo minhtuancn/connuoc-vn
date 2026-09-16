@@ -6,10 +6,8 @@ import 'package:connuoc_viet/features/settings/domain/preferences_repository.dar
 DateTime _systemUtcNow() => DateTime.now().toUtc();
 
 class DriftPreferencesRepository implements PreferencesRepository {
-  DriftPreferencesRepository(
-    this._database, {
-    DateTime Function()? nowUtc,
-  }) : _nowUtc = nowUtc ?? _systemUtcNow;
+  DriftPreferencesRepository(this._database, {DateTime Function()? nowUtc})
+    : _nowUtc = nowUtc ?? _systemUtcNow;
 
   static const _wifiOnlyDownloadsKey = 'wifi_only_downloads';
   static const _preferredLocaleTagKey = 'preferred_locale_tag';
@@ -73,22 +71,27 @@ class DriftPreferencesRepository implements PreferencesRepository {
   }
 
   Future<Object?> _readScalar(String key) async {
-    final row = await (_database.select(_database.preferences)
-          ..where((table) => table.key.equals(key)))
-        .getSingleOrNull();
+    final row = await (_database.select(
+      _database.preferences,
+    )..where((table) => table.key.equals(key))).getSingleOrNull();
     if (row == null) {
       return null;
     }
 
     final decoded = jsonDecode(row.jsonScalarValue);
-    if (decoded is num || decoded is bool || decoded is String || decoded == null) {
+    if (decoded is num ||
+        decoded is bool ||
+        decoded is String ||
+        decoded == null) {
       return decoded;
     }
     throw StateError('Stored preference $key is not a JSON scalar.');
   }
 
   Future<void> _putScalar(String key, Object value) async {
-    await _database.into(_database.preferences).insertOnConflictUpdate(
+    await _database
+        .into(_database.preferences)
+        .insertOnConflictUpdate(
           PreferencesCompanion.insert(
             key: key,
             jsonScalarValue: jsonEncode(value),
@@ -98,9 +101,8 @@ class DriftPreferencesRepository implements PreferencesRepository {
   }
 
   Future<void> _delete(String key) {
-    return (_database.delete(_database.preferences)
-          ..where((table) => table.key.equals(key)))
-        .go()
-        .then((_) {});
+    return (_database.delete(
+      _database.preferences,
+    )..where((table) => table.key.equals(key))).go().then((_) {});
   }
 }

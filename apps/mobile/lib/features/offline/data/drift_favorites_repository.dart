@@ -5,10 +5,8 @@ import 'package:drift/drift.dart' show InsertMode;
 DateTime _systemUtcNow() => DateTime.now().toUtc();
 
 class DriftFavoritesRepository implements FavoritesRepository {
-  DriftFavoritesRepository(
-    this._database, {
-    DateTime Function()? nowUtc,
-  }) : _nowUtc = nowUtc ?? _systemUtcNow;
+  DriftFavoritesRepository(this._database, {DateTime Function()? nowUtc})
+    : _nowUtc = nowUtc ?? _systemUtcNow;
 
   final AppDatabase _database;
   final DateTime Function() _nowUtc;
@@ -29,7 +27,8 @@ class DriftFavoritesRepository implements FavoritesRepository {
   @override
   Stream<List<String>> watch() {
     return _database.select(_database.favorites).watch().map((rows) {
-      final sorted = [...rows]..sort((a, b) {
+      final sorted = [...rows]
+        ..sort((a, b) {
           final created = a.createdAtUtc.compareTo(b.createdAtUtc);
           if (created != 0) {
             return created;
@@ -47,7 +46,9 @@ class DriftFavoritesRepository implements FavoritesRepository {
   }
 
   Future<void> _add(String stationId) async {
-    await _database.into(_database.favorites).insert(
+    await _database
+        .into(_database.favorites)
+        .insert(
           FavoritesCompanion.insert(
             stationId: stationId,
             createdAtUtc: _nowUtc().toUtc(),
@@ -59,10 +60,9 @@ class DriftFavoritesRepository implements FavoritesRepository {
   @override
   Future<void> remove(String stationId) {
     final normalized = _normalizeStationId(stationId);
-    return (_database.delete(_database.favorites)
-          ..where((table) => table.stationId.equals(normalized)))
-        .go()
-        .then((_) {});
+    return (_database.delete(
+      _database.favorites,
+    )..where((table) => table.stationId.equals(normalized))).go().then((_) {});
   }
 
   String _normalizeStationId(String stationId) {
