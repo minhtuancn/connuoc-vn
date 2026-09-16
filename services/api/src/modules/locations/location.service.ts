@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { LocationRepository } from './location.repository.js';
+import type { LocationRepository } from './location.repository.js';
 import type {
   LocationSearchOptions,
   LocationSearchResult,
