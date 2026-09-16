@@ -18,16 +18,16 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
   ) async {
     cacheKeyForStation(stationId);
     final id = stationId.trim();
-    final station = await (_database.select(_database.stations)
-          ..where((table) => table.id.equals(id)))
-        .getSingleOrNull();
+    final station = await (_database.select(
+      _database.stations,
+    )..where((table) => table.id.equals(id))).getSingleOrNull();
     if (station == null || station.detailGeneratedAtUtc == null) {
       return null;
     }
 
-    final cache = await (_database.select(_database.stationDetailCaches)
-          ..where((table) => table.stationId.equals(id)))
-        .getSingleOrNull();
+    final cache = await (_database.select(
+      _database.stationDetailCaches,
+    )..where((table) => table.stationId.equals(id))).getSingleOrNull();
     if (cache == null) {
       return null;
     }
@@ -60,7 +60,9 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
     final station = resource.value;
     final provenance = station.provenance;
     return _database.transaction(() async {
-      await _database.into(_database.stations).insertOnConflictUpdate(
+      await _database
+          .into(_database.stations)
+          .insertOnConflictUpdate(
             local.StationsCompanion.insert(
               id: station.id,
               name: station.name,
@@ -88,7 +90,9 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
             ),
           );
       await _replaceAliases(station.id, station.aliases);
-      await _database.into(_database.stationDetailCaches).insertOnConflictUpdate(
+      await _database
+          .into(_database.stationDetailCaches)
+          .insertOnConflictUpdate(
             local.StationDetailCachesCompanion.insert(
               stationId: station.id,
               fetchedAtUtc: resource.fetchedAtUtc.toUtc(),
@@ -105,23 +109,23 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
     SearchLocationsRequest request,
   ) async {
     final key = cacheKeyForSearch(request);
-    final page = await (_database.select(_database.locationSearchPages)
-          ..where((table) => table.cacheKey.equals(key)))
-        .getSingleOrNull();
+    final page = await (_database.select(
+      _database.locationSearchPages,
+    )..where((table) => table.cacheKey.equals(key))).getSingleOrNull();
     if (page == null) {
       return null;
     }
 
-    final pageItems = await (_database.select(_database.locationSearchPageItems)
-          ..where((table) => table.cacheKey.equals(key)))
-        .get();
+    final pageItems = await (_database.select(
+      _database.locationSearchPageItems,
+    )..where((table) => table.cacheKey.equals(key))).get();
     pageItems.sort((a, b) => a.ordinal.compareTo(b.ordinal));
 
     final items = <domain.LocationSummary>[];
     for (final item in pageItems) {
-      final station = await (_database.select(_database.stations)
-            ..where((table) => table.id.equals(item.stationId)))
-          .getSingleOrNull();
+      final station = await (_database.select(
+        _database.stations,
+      )..where((table) => table.id.equals(item.stationId))).getSingleOrNull();
       if (station == null) {
         return null;
       }
@@ -165,10 +169,12 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
         await _upsertSearchStation(item, resource.fetchedAtUtc);
       }
 
-      await (_database.delete(_database.locationSearchPageItems)
-            ..where((table) => table.cacheKey.equals(key)))
-          .go();
-      await _database.into(_database.locationSearchPages).insertOnConflictUpdate(
+      await (_database.delete(
+        _database.locationSearchPageItems,
+      )..where((table) => table.cacheKey.equals(key))).go();
+      await _database
+          .into(_database.locationSearchPages)
+          .insertOnConflictUpdate(
             local.LocationSearchPagesCompanion.insert(
               cacheKey: key,
               query: request.query,
@@ -184,7 +190,9 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
           );
 
       for (final (index, item) in resource.value.items.indexed) {
-        await _database.into(_database.locationSearchPageItems).insert(
+        await _database
+            .into(_database.locationSearchPageItems)
+            .insert(
               local.LocationSearchPageItemsCompanion.insert(
                 cacheKey: key,
                 ordinal: index,
@@ -200,16 +208,16 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
     TideRequest request,
   ) async {
     final key = cacheKeyForTide(request);
-    final series = await (_database.select(_database.tideSeries)
-          ..where((table) => table.cacheKey.equals(key)))
-        .getSingleOrNull();
+    final series = await (_database.select(
+      _database.tideSeries,
+    )..where((table) => table.cacheKey.equals(key))).getSingleOrNull();
     if (series == null) {
       return null;
     }
 
-    final pointRows = await (_database.select(_database.tidePoints)
-          ..where((table) => table.seriesKey.equals(key)))
-        .get();
+    final pointRows = await (_database.select(
+      _database.tidePoints,
+    )..where((table) => table.seriesKey.equals(key))).get();
     pointRows.sort((a, b) => a.timestampUtc.compareTo(b.timestampUtc));
 
     return _remoteResource(
@@ -254,10 +262,12 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
     final key = cacheKeyForTide(request);
     final series = resource.value;
     return _database.transaction(() async {
-      await (_database.delete(_database.tidePoints)
-            ..where((table) => table.seriesKey.equals(key)))
-          .go();
-      await _database.into(_database.tideSeries).insertOnConflictUpdate(
+      await (_database.delete(
+        _database.tidePoints,
+      )..where((table) => table.seriesKey.equals(key))).go();
+      await _database
+          .into(_database.tideSeries)
+          .insertOnConflictUpdate(
             local.TideSeriesCompanion.insert(
               cacheKey: key,
               stationId: series.stationId,
@@ -282,7 +292,9 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
             ),
           );
       for (final point in series.points) {
-        await _database.into(_database.tidePoints).insert(
+        await _database
+            .into(_database.tidePoints)
+            .insert(
               local.TidePointsCompanion.insert(
                 seriesKey: key,
                 timestampUtc: point.timestampUtc.toUtc(),
@@ -298,27 +310,27 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
     WaterLevelRequest request,
   ) async {
     final key = cacheKeyForWaterLevels(request);
-    final page = await (_database.select(_database.waterLevelPages)
-          ..where((table) => table.cacheKey.equals(key)))
-        .getSingleOrNull();
+    final page = await (_database.select(
+      _database.waterLevelPages,
+    )..where((table) => table.cacheKey.equals(key))).getSingleOrNull();
     if (page == null) {
       return null;
     }
 
-    final itemRows = await (_database.select(_database.waterLevelPageItems)
-          ..where((table) => table.pageKey.equals(key)))
-        .get();
+    final itemRows = await (_database.select(
+      _database.waterLevelPageItems,
+    )..where((table) => table.pageKey.equals(key))).get();
     itemRows.sort((a, b) => a.ordinal.compareTo(b.ordinal));
 
     final observations = <domain.WaterLevelObservation>[];
     for (final item in itemRows) {
-      final observation = await (_database.select(_database.waterLevelObservations)
-            ..where(
-              (table) =>
-                  table.stationId.equals(item.stationId) &
-                  table.sourceRecordKey.equals(item.sourceRecordKey),
-            ))
-          .getSingleOrNull();
+      final observation =
+          await (_database.select(_database.waterLevelObservations)..where(
+                (table) =>
+                    table.stationId.equals(item.stationId) &
+                    table.sourceRecordKey.equals(item.sourceRecordKey),
+              ))
+              .getSingleOrNull();
       if (observation == null) {
         return null;
       }
@@ -354,10 +366,12 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
     final key = cacheKeyForWaterLevels(request);
     final page = resource.value;
     return _database.transaction(() async {
-      await (_database.delete(_database.waterLevelPageItems)
-            ..where((table) => table.pageKey.equals(key)))
-          .go();
-      await _database.into(_database.waterLevelPages).insertOnConflictUpdate(
+      await (_database.delete(
+        _database.waterLevelPageItems,
+      )..where((table) => table.pageKey.equals(key))).go();
+      await _database
+          .into(_database.waterLevelPages)
+          .insertOnConflictUpdate(
             local.WaterLevelPagesCompanion.insert(
               cacheKey: key,
               stationId: page.station.id,
@@ -401,7 +415,9 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
                 provenanceObservedAtUtc: provenance.observedAtUtc.toUtc(),
               ),
             );
-        await _database.into(_database.waterLevelPageItems).insert(
+        await _database
+            .into(_database.waterLevelPageItems)
+            .insert(
               local.WaterLevelPageItemsCompanion.insert(
                 pageKey: key,
                 ordinal: index,
@@ -418,9 +434,9 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
     CalendarRequest request,
   ) async {
     final key = cacheKeyForCalendar(request);
-    final day = await (_database.select(_database.calendarDays)
-          ..where((table) => table.cacheKey.equals(key)))
-        .getSingleOrNull();
+    final day = await (_database.select(
+      _database.calendarDays,
+    )..where((table) => table.cacheKey.equals(key))).getSingleOrNull();
     if (day == null) {
       return null;
     }
@@ -454,7 +470,9 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
   ) async {
     final key = cacheKeyForCalendar(request);
     final day = resource.value;
-    await _database.into(_database.calendarDays).insertOnConflictUpdate(
+    await _database
+        .into(_database.calendarDays)
+        .insertOnConflictUpdate(
           local.CalendarDaysCompanion.insert(
             cacheKey: key,
             solarYear: day.solarDate.year,
@@ -478,10 +496,12 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
     domain.LocationSummary station,
     DateTime fetchedAtUtc,
   ) async {
-    final existing = await (_database.select(_database.stations)
-          ..where((table) => table.id.equals(station.id)))
-        .getSingleOrNull();
-    await _database.into(_database.stations).insertOnConflictUpdate(
+    final existing = await (_database.select(
+      _database.stations,
+    )..where((table) => table.id.equals(station.id))).getSingleOrNull();
+    await _database
+        .into(_database.stations)
+        .insertOnConflictUpdate(
           local.StationsCompanion.insert(
             id: station.id,
             name: station.name,
@@ -512,11 +532,13 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
   }
 
   Future<void> _replaceAliases(String stationId, List<String> aliases) async {
-    await (_database.delete(_database.stationAliases)
-          ..where((table) => table.stationId.equals(stationId)))
-        .go();
+    await (_database.delete(
+      _database.stationAliases,
+    )..where((table) => table.stationId.equals(stationId))).go();
     for (final alias in aliases) {
-      await _database.into(_database.stationAliases).insertOnConflictUpdate(
+      await _database
+          .into(_database.stationAliases)
+          .insertOnConflictUpdate(
             local.StationAliasesCompanion.insert(
               stationId: stationId,
               alias: alias,
@@ -526,9 +548,9 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
   }
 
   Future<List<String>> _aliasesForStation(String stationId) async {
-    final rows = await (_database.select(_database.stationAliases)
-          ..where((table) => table.stationId.equals(stationId)))
-        .get();
+    final rows = await (_database.select(
+      _database.stationAliases,
+    )..where((table) => table.stationId.equals(stationId))).get();
     rows.sort((a, b) => a.alias.compareTo(b.alias));
     return List.unmodifiable(rows.map((row) => row.alias));
   }
@@ -594,9 +616,7 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
       fetchedAtUtc: fetchedAtUtc.toUtc(),
       cachePolicy: CachePolicy(
         maxAge: Duration(seconds: maxAgeSeconds),
-        staleWhileRevalidate: Duration(
-          seconds: staleWhileRevalidateSeconds,
-        ),
+        staleWhileRevalidate: Duration(seconds: staleWhileRevalidateSeconds),
       ),
     );
   }
@@ -609,43 +629,41 @@ class DriftPublicDataCacheStore implements PublicDataCacheStore {
   }
 
   String _unitToWire(domain.WaterLevelUnit unit) => switch (unit) {
-        domain.WaterLevelUnit.m => 'm',
-        domain.WaterLevelUnit.cm => 'cm',
-        domain.WaterLevelUnit.mm => 'mm',
-      };
+    domain.WaterLevelUnit.m => 'm',
+    domain.WaterLevelUnit.cm => 'cm',
+    domain.WaterLevelUnit.mm => 'mm',
+  };
 
   domain.WaterLevelUnit _unitFromWire(String unit) => switch (unit) {
-        'm' => domain.WaterLevelUnit.m,
-        'cm' => domain.WaterLevelUnit.cm,
-        'mm' => domain.WaterLevelUnit.mm,
-        _ => throw StateError('Unsupported cached water-level unit: $unit'),
-      };
+    'm' => domain.WaterLevelUnit.m,
+    'cm' => domain.WaterLevelUnit.cm,
+    'mm' => domain.WaterLevelUnit.mm,
+    _ => throw StateError('Unsupported cached water-level unit: $unit'),
+  };
 
   String _qualityToWire(domain.QualityState quality) => switch (quality) {
-        domain.QualityState.good => 'GOOD',
-        domain.QualityState.suspect => 'SUSPECT',
-        domain.QualityState.bad => 'BAD',
-        domain.QualityState.unknown => 'UNKNOWN',
-      };
+    domain.QualityState.good => 'GOOD',
+    domain.QualityState.suspect => 'SUSPECT',
+    domain.QualityState.bad => 'BAD',
+    domain.QualityState.unknown => 'UNKNOWN',
+  };
 
   domain.QualityState _qualityFromWire(String quality) => switch (quality) {
-        'GOOD' => domain.QualityState.good,
-        'SUSPECT' => domain.QualityState.suspect,
-        'BAD' => domain.QualityState.bad,
-        'UNKNOWN' => domain.QualityState.unknown,
-        _ => throw StateError('Unsupported cached quality state: $quality'),
-      };
+    'GOOD' => domain.QualityState.good,
+    'SUSPECT' => domain.QualityState.suspect,
+    'BAD' => domain.QualityState.bad,
+    'UNKNOWN' => domain.QualityState.unknown,
+    _ => throw StateError('Unsupported cached quality state: $quality'),
+  };
 
   String _phaseToWire(domain.HarmonicPhaseConvention phase) => switch (phase) {
-        domain.HarmonicPhaseConvention.cosineLagDegrees =>
-          'cosine_lag_degrees',
-        domain.HarmonicPhaseConvention.cosineLeadDegrees =>
-          'cosine_lead_degrees',
-      };
+    domain.HarmonicPhaseConvention.cosineLagDegrees => 'cosine_lag_degrees',
+    domain.HarmonicPhaseConvention.cosineLeadDegrees => 'cosine_lead_degrees',
+  };
 
-  domain.HarmonicPhaseConvention _phaseFromWire(String phase) => switch (phase) {
-        'cosine_lag_degrees' =>
-          domain.HarmonicPhaseConvention.cosineLagDegrees,
+  domain.HarmonicPhaseConvention _phaseFromWire(String phase) =>
+      switch (phase) {
+        'cosine_lag_degrees' => domain.HarmonicPhaseConvention.cosineLagDegrees,
         'cosine_lead_degrees' =>
           domain.HarmonicPhaseConvention.cosineLeadDegrees,
         _ => throw StateError('Unsupported cached phase convention: $phase'),

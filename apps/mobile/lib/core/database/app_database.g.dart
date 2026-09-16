@@ -1207,6 +1207,362 @@ class StationAliasesCompanion extends UpdateCompanion<StationAliase> {
   }
 }
 
+class $StationDetailCachesTable extends StationDetailCaches
+    with TableInfo<$StationDetailCachesTable, StationDetailCache> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StationDetailCachesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _stationIdMeta = const VerificationMeta(
+    'stationId',
+  );
+  @override
+  late final GeneratedColumn<String> stationId = GeneratedColumn<String>(
+    'station_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES stations (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _fetchedAtUtcMeta = const VerificationMeta(
+    'fetchedAtUtc',
+  );
+  @override
+  late final GeneratedColumn<DateTime> fetchedAtUtc = GeneratedColumn<DateTime>(
+    'fetched_at_utc',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _maxAgeSecondsMeta = const VerificationMeta(
+    'maxAgeSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> maxAgeSeconds = GeneratedColumn<int>(
+    'max_age_seconds',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _staleWhileRevalidateSecondsMeta =
+      const VerificationMeta('staleWhileRevalidateSeconds');
+  @override
+  late final GeneratedColumn<int> staleWhileRevalidateSeconds =
+      GeneratedColumn<int>(
+        'stale_while_revalidate_seconds',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    stationId,
+    fetchedAtUtc,
+    maxAgeSeconds,
+    staleWhileRevalidateSeconds,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'station_detail_caches';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StationDetailCache> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('station_id')) {
+      context.handle(
+        _stationIdMeta,
+        stationId.isAcceptableOrUnknown(data['station_id']!, _stationIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_stationIdMeta);
+    }
+    if (data.containsKey('fetched_at_utc')) {
+      context.handle(
+        _fetchedAtUtcMeta,
+        fetchedAtUtc.isAcceptableOrUnknown(
+          data['fetched_at_utc']!,
+          _fetchedAtUtcMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fetchedAtUtcMeta);
+    }
+    if (data.containsKey('max_age_seconds')) {
+      context.handle(
+        _maxAgeSecondsMeta,
+        maxAgeSeconds.isAcceptableOrUnknown(
+          data['max_age_seconds']!,
+          _maxAgeSecondsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_maxAgeSecondsMeta);
+    }
+    if (data.containsKey('stale_while_revalidate_seconds')) {
+      context.handle(
+        _staleWhileRevalidateSecondsMeta,
+        staleWhileRevalidateSeconds.isAcceptableOrUnknown(
+          data['stale_while_revalidate_seconds']!,
+          _staleWhileRevalidateSecondsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_staleWhileRevalidateSecondsMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {stationId};
+  @override
+  StationDetailCache map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StationDetailCache(
+      stationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}station_id'],
+      )!,
+      fetchedAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}fetched_at_utc'],
+      )!,
+      maxAgeSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}max_age_seconds'],
+      )!,
+      staleWhileRevalidateSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}stale_while_revalidate_seconds'],
+      )!,
+    );
+  }
+
+  @override
+  $StationDetailCachesTable createAlias(String alias) {
+    return $StationDetailCachesTable(attachedDatabase, alias);
+  }
+}
+
+class StationDetailCache extends DataClass
+    implements Insertable<StationDetailCache> {
+  final String stationId;
+  final DateTime fetchedAtUtc;
+  final int maxAgeSeconds;
+  final int staleWhileRevalidateSeconds;
+  const StationDetailCache({
+    required this.stationId,
+    required this.fetchedAtUtc,
+    required this.maxAgeSeconds,
+    required this.staleWhileRevalidateSeconds,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['station_id'] = Variable<String>(stationId);
+    map['fetched_at_utc'] = Variable<DateTime>(fetchedAtUtc);
+    map['max_age_seconds'] = Variable<int>(maxAgeSeconds);
+    map['stale_while_revalidate_seconds'] = Variable<int>(
+      staleWhileRevalidateSeconds,
+    );
+    return map;
+  }
+
+  StationDetailCachesCompanion toCompanion(bool nullToAbsent) {
+    return StationDetailCachesCompanion(
+      stationId: Value(stationId),
+      fetchedAtUtc: Value(fetchedAtUtc),
+      maxAgeSeconds: Value(maxAgeSeconds),
+      staleWhileRevalidateSeconds: Value(staleWhileRevalidateSeconds),
+    );
+  }
+
+  factory StationDetailCache.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StationDetailCache(
+      stationId: serializer.fromJson<String>(json['stationId']),
+      fetchedAtUtc: serializer.fromJson<DateTime>(json['fetchedAtUtc']),
+      maxAgeSeconds: serializer.fromJson<int>(json['maxAgeSeconds']),
+      staleWhileRevalidateSeconds: serializer.fromJson<int>(
+        json['staleWhileRevalidateSeconds'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'stationId': serializer.toJson<String>(stationId),
+      'fetchedAtUtc': serializer.toJson<DateTime>(fetchedAtUtc),
+      'maxAgeSeconds': serializer.toJson<int>(maxAgeSeconds),
+      'staleWhileRevalidateSeconds': serializer.toJson<int>(
+        staleWhileRevalidateSeconds,
+      ),
+    };
+  }
+
+  StationDetailCache copyWith({
+    String? stationId,
+    DateTime? fetchedAtUtc,
+    int? maxAgeSeconds,
+    int? staleWhileRevalidateSeconds,
+  }) => StationDetailCache(
+    stationId: stationId ?? this.stationId,
+    fetchedAtUtc: fetchedAtUtc ?? this.fetchedAtUtc,
+    maxAgeSeconds: maxAgeSeconds ?? this.maxAgeSeconds,
+    staleWhileRevalidateSeconds:
+        staleWhileRevalidateSeconds ?? this.staleWhileRevalidateSeconds,
+  );
+  StationDetailCache copyWithCompanion(StationDetailCachesCompanion data) {
+    return StationDetailCache(
+      stationId: data.stationId.present ? data.stationId.value : this.stationId,
+      fetchedAtUtc: data.fetchedAtUtc.present
+          ? data.fetchedAtUtc.value
+          : this.fetchedAtUtc,
+      maxAgeSeconds: data.maxAgeSeconds.present
+          ? data.maxAgeSeconds.value
+          : this.maxAgeSeconds,
+      staleWhileRevalidateSeconds: data.staleWhileRevalidateSeconds.present
+          ? data.staleWhileRevalidateSeconds.value
+          : this.staleWhileRevalidateSeconds,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StationDetailCache(')
+          ..write('stationId: $stationId, ')
+          ..write('fetchedAtUtc: $fetchedAtUtc, ')
+          ..write('maxAgeSeconds: $maxAgeSeconds, ')
+          ..write('staleWhileRevalidateSeconds: $staleWhileRevalidateSeconds')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    stationId,
+    fetchedAtUtc,
+    maxAgeSeconds,
+    staleWhileRevalidateSeconds,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StationDetailCache &&
+          other.stationId == this.stationId &&
+          other.fetchedAtUtc == this.fetchedAtUtc &&
+          other.maxAgeSeconds == this.maxAgeSeconds &&
+          other.staleWhileRevalidateSeconds ==
+              this.staleWhileRevalidateSeconds);
+}
+
+class StationDetailCachesCompanion extends UpdateCompanion<StationDetailCache> {
+  final Value<String> stationId;
+  final Value<DateTime> fetchedAtUtc;
+  final Value<int> maxAgeSeconds;
+  final Value<int> staleWhileRevalidateSeconds;
+  final Value<int> rowid;
+  const StationDetailCachesCompanion({
+    this.stationId = const Value.absent(),
+    this.fetchedAtUtc = const Value.absent(),
+    this.maxAgeSeconds = const Value.absent(),
+    this.staleWhileRevalidateSeconds = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StationDetailCachesCompanion.insert({
+    required String stationId,
+    required DateTime fetchedAtUtc,
+    required int maxAgeSeconds,
+    required int staleWhileRevalidateSeconds,
+    this.rowid = const Value.absent(),
+  }) : stationId = Value(stationId),
+       fetchedAtUtc = Value(fetchedAtUtc),
+       maxAgeSeconds = Value(maxAgeSeconds),
+       staleWhileRevalidateSeconds = Value(staleWhileRevalidateSeconds);
+  static Insertable<StationDetailCache> custom({
+    Expression<String>? stationId,
+    Expression<DateTime>? fetchedAtUtc,
+    Expression<int>? maxAgeSeconds,
+    Expression<int>? staleWhileRevalidateSeconds,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (stationId != null) 'station_id': stationId,
+      if (fetchedAtUtc != null) 'fetched_at_utc': fetchedAtUtc,
+      if (maxAgeSeconds != null) 'max_age_seconds': maxAgeSeconds,
+      if (staleWhileRevalidateSeconds != null)
+        'stale_while_revalidate_seconds': staleWhileRevalidateSeconds,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StationDetailCachesCompanion copyWith({
+    Value<String>? stationId,
+    Value<DateTime>? fetchedAtUtc,
+    Value<int>? maxAgeSeconds,
+    Value<int>? staleWhileRevalidateSeconds,
+    Value<int>? rowid,
+  }) {
+    return StationDetailCachesCompanion(
+      stationId: stationId ?? this.stationId,
+      fetchedAtUtc: fetchedAtUtc ?? this.fetchedAtUtc,
+      maxAgeSeconds: maxAgeSeconds ?? this.maxAgeSeconds,
+      staleWhileRevalidateSeconds:
+          staleWhileRevalidateSeconds ?? this.staleWhileRevalidateSeconds,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (stationId.present) {
+      map['station_id'] = Variable<String>(stationId.value);
+    }
+    if (fetchedAtUtc.present) {
+      map['fetched_at_utc'] = Variable<DateTime>(fetchedAtUtc.value);
+    }
+    if (maxAgeSeconds.present) {
+      map['max_age_seconds'] = Variable<int>(maxAgeSeconds.value);
+    }
+    if (staleWhileRevalidateSeconds.present) {
+      map['stale_while_revalidate_seconds'] = Variable<int>(
+        staleWhileRevalidateSeconds.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StationDetailCachesCompanion(')
+          ..write('stationId: $stationId, ')
+          ..write('fetchedAtUtc: $fetchedAtUtc, ')
+          ..write('maxAgeSeconds: $maxAgeSeconds, ')
+          ..write('staleWhileRevalidateSeconds: $staleWhileRevalidateSeconds, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $LocationSearchPagesTable extends LocationSearchPages
     with TableInfo<$LocationSearchPagesTable, LocationSearchPage> {
   @override
@@ -8343,6 +8699,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $StationsTable stations = $StationsTable(this);
   late final $StationAliasesTable stationAliases = $StationAliasesTable(this);
+  late final $StationDetailCachesTable stationDetailCaches =
+      $StationDetailCachesTable(this);
   late final $LocationSearchPagesTable locationSearchPages =
       $LocationSearchPagesTable(this);
   late final $LocationSearchPageItemsTable locationSearchPageItems =
@@ -8372,6 +8730,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     stations,
     stationAliases,
+    stationDetailCaches,
     locationSearchPages,
     locationSearchPageItems,
     tideSeries,
@@ -8394,6 +8753,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('station_aliases', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'stations',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('station_detail_caches', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -8484,6 +8850,30 @@ final class $$StationsTableReferences
     ).filter((f) => f.stationId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_stationAliasesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $StationDetailCachesTable,
+    List<StationDetailCache>
+  >
+  _stationDetailCachesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.stationDetailCaches,
+        aliasName: 'stations__id__station_detail_caches__station_id',
+      );
+
+  $$StationDetailCachesTableProcessedTableManager get stationDetailCachesRefs {
+    final manager = $$StationDetailCachesTableTableManager(
+      $_db,
+      $_db.stationDetailCaches,
+    ).filter((f) => f.stationId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _stationDetailCachesRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -8633,6 +9023,31 @@ class $$StationsTableFilterComposer
           }) => $$StationAliasesTableFilterComposer(
             $db: $db,
             $table: $db.stationAliases,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> stationDetailCachesRefs(
+    Expression<bool> Function($$StationDetailCachesTableFilterComposer f) f,
+  ) {
+    final $$StationDetailCachesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stationDetailCaches,
+      getReferencedColumn: (t) => t.stationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StationDetailCachesTableFilterComposer(
+            $db: $db,
+            $table: $db.stationDetailCaches,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -8878,6 +9293,32 @@ class $$StationsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> stationDetailCachesRefs<T extends Object>(
+    Expression<T> Function($$StationDetailCachesTableAnnotationComposer a) f,
+  ) {
+    final $$StationDetailCachesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.stationDetailCaches,
+          getReferencedColumn: (t) => t.stationId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$StationDetailCachesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.stationDetailCaches,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
   Expression<T> locationSearchPageItemsRefs<T extends Object>(
     Expression<T> Function($$LocationSearchPageItemsTableAnnotationComposer a)
     f,
@@ -8946,6 +9387,7 @@ class $$StationsTableTableManager
           Station,
           PrefetchHooks Function({
             bool stationAliasesRefs,
+            bool stationDetailCachesRefs,
             bool locationSearchPageItemsRefs,
             bool tideSeriesRefs,
           })
@@ -9048,6 +9490,7 @@ class $$StationsTableTableManager
           prefetchHooksCallback:
               ({
                 stationAliasesRefs = false,
+                stationDetailCachesRefs = false,
                 locationSearchPageItemsRefs = false,
                 tideSeriesRefs = false,
               }) {
@@ -9055,6 +9498,7 @@ class $$StationsTableTableManager
                   db: db,
                   explicitlyWatchedTables: [
                     if (stationAliasesRefs) db.stationAliases,
+                    if (stationDetailCachesRefs) db.stationDetailCaches,
                     if (locationSearchPageItemsRefs) db.locationSearchPageItems,
                     if (tideSeriesRefs) db.tideSeries,
                   ],
@@ -9076,6 +9520,27 @@ class $$StationsTableTableManager
                                 table,
                                 p0,
                               ).stationAliasesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.stationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (stationDetailCachesRefs)
+                        await $_getPrefetchedData<
+                          Station,
+                          $StationsTable,
+                          StationDetailCache
+                        >(
+                          currentTable: table,
+                          referencedTable: $$StationsTableReferences
+                              ._stationDetailCachesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$StationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).stationDetailCachesRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.stationId == item.id,
@@ -9146,6 +9611,7 @@ typedef $$StationsTableProcessedTableManager =
       Station,
       PrefetchHooks Function({
         bool stationAliasesRefs,
+        bool stationDetailCachesRefs,
         bool locationSearchPageItemsRefs,
         bool tideSeriesRefs,
       })
@@ -9415,6 +9881,331 @@ typedef $$StationAliasesTableProcessedTableManager =
       $$StationAliasesTableUpdateCompanionBuilder,
       (StationAliase, $$StationAliasesTableReferences),
       StationAliase,
+      PrefetchHooks Function({bool stationId})
+    >;
+typedef $$StationDetailCachesTableCreateCompanionBuilder =
+    StationDetailCachesCompanion Function({
+      required String stationId,
+      required DateTime fetchedAtUtc,
+      required int maxAgeSeconds,
+      required int staleWhileRevalidateSeconds,
+      Value<int> rowid,
+    });
+typedef $$StationDetailCachesTableUpdateCompanionBuilder =
+    StationDetailCachesCompanion Function({
+      Value<String> stationId,
+      Value<DateTime> fetchedAtUtc,
+      Value<int> maxAgeSeconds,
+      Value<int> staleWhileRevalidateSeconds,
+      Value<int> rowid,
+    });
+
+final class $$StationDetailCachesTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $StationDetailCachesTable,
+          StationDetailCache
+        > {
+  $$StationDetailCachesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $StationsTable _stationIdTable(_$AppDatabase db) => db.stations
+      .createAlias('station_detail_caches__station_id__stations__id');
+
+  $$StationsTableProcessedTableManager get stationId {
+    final $_column = $_itemColumn<String>('station_id')!;
+
+    final manager = $$StationsTableTableManager(
+      $_db,
+      $_db.stations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_stationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$StationDetailCachesTableFilterComposer
+    extends Composer<_$AppDatabase, $StationDetailCachesTable> {
+  $$StationDetailCachesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get fetchedAtUtc => $composableBuilder(
+    column: $table.fetchedAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get maxAgeSeconds => $composableBuilder(
+    column: $table.maxAgeSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get staleWhileRevalidateSeconds => $composableBuilder(
+    column: $table.staleWhileRevalidateSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$StationsTableFilterComposer get stationId {
+    final $$StationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.stationId,
+      referencedTable: $db.stations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StationsTableFilterComposer(
+            $db: $db,
+            $table: $db.stations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StationDetailCachesTableOrderingComposer
+    extends Composer<_$AppDatabase, $StationDetailCachesTable> {
+  $$StationDetailCachesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get fetchedAtUtc => $composableBuilder(
+    column: $table.fetchedAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get maxAgeSeconds => $composableBuilder(
+    column: $table.maxAgeSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get staleWhileRevalidateSeconds => $composableBuilder(
+    column: $table.staleWhileRevalidateSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$StationsTableOrderingComposer get stationId {
+    final $$StationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.stationId,
+      referencedTable: $db.stations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.stations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StationDetailCachesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StationDetailCachesTable> {
+  $$StationDetailCachesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get fetchedAtUtc => $composableBuilder(
+    column: $table.fetchedAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get maxAgeSeconds => $composableBuilder(
+    column: $table.maxAgeSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get staleWhileRevalidateSeconds => $composableBuilder(
+    column: $table.staleWhileRevalidateSeconds,
+    builder: (column) => column,
+  );
+
+  $$StationsTableAnnotationComposer get stationId {
+    final $$StationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.stationId,
+      referencedTable: $db.stations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.stations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StationDetailCachesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StationDetailCachesTable,
+          StationDetailCache,
+          $$StationDetailCachesTableFilterComposer,
+          $$StationDetailCachesTableOrderingComposer,
+          $$StationDetailCachesTableAnnotationComposer,
+          $$StationDetailCachesTableCreateCompanionBuilder,
+          $$StationDetailCachesTableUpdateCompanionBuilder,
+          (StationDetailCache, $$StationDetailCachesTableReferences),
+          StationDetailCache,
+          PrefetchHooks Function({bool stationId})
+        > {
+  $$StationDetailCachesTableTableManager(
+    _$AppDatabase db,
+    $StationDetailCachesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StationDetailCachesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StationDetailCachesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$StationDetailCachesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> stationId = const Value.absent(),
+                Value<DateTime> fetchedAtUtc = const Value.absent(),
+                Value<int> maxAgeSeconds = const Value.absent(),
+                Value<int> staleWhileRevalidateSeconds = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StationDetailCachesCompanion(
+                stationId: stationId,
+                fetchedAtUtc: fetchedAtUtc,
+                maxAgeSeconds: maxAgeSeconds,
+                staleWhileRevalidateSeconds: staleWhileRevalidateSeconds,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String stationId,
+                required DateTime fetchedAtUtc,
+                required int maxAgeSeconds,
+                required int staleWhileRevalidateSeconds,
+                Value<int> rowid = const Value.absent(),
+              }) => StationDetailCachesCompanion.insert(
+                stationId: stationId,
+                fetchedAtUtc: fetchedAtUtc,
+                maxAgeSeconds: maxAgeSeconds,
+                staleWhileRevalidateSeconds: staleWhileRevalidateSeconds,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$StationDetailCachesTable, StationDetailCache>(
+                    table,
+                  ),
+                  $$StationDetailCachesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({stationId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (stationId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.stationId,
+                                referencedTable:
+                                    $$StationDetailCachesTableReferences
+                                        ._stationIdTable(db),
+                                referencedColumn:
+                                    $$StationDetailCachesTableReferences
+                                        ._stationIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$StationDetailCachesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StationDetailCachesTable,
+      StationDetailCache,
+      $$StationDetailCachesTableFilterComposer,
+      $$StationDetailCachesTableOrderingComposer,
+      $$StationDetailCachesTableAnnotationComposer,
+      $$StationDetailCachesTableCreateCompanionBuilder,
+      $$StationDetailCachesTableUpdateCompanionBuilder,
+      (StationDetailCache, $$StationDetailCachesTableReferences),
+      StationDetailCache,
       PrefetchHooks Function({bool stationId})
     >;
 typedef $$LocationSearchPagesTableCreateCompanionBuilder =
@@ -14167,6 +14958,8 @@ class $AppDatabaseManager {
       $$StationsTableTableManager(_db, _db.stations);
   $$StationAliasesTableTableManager get stationAliases =>
       $$StationAliasesTableTableManager(_db, _db.stationAliases);
+  $$StationDetailCachesTableTableManager get stationDetailCaches =>
+      $$StationDetailCachesTableTableManager(_db, _db.stationDetailCaches);
   $$LocationSearchPagesTableTableManager get locationSearchPages =>
       $$LocationSearchPagesTableTableManager(_db, _db.locationSearchPages);
   $$LocationSearchPageItemsTableTableManager get locationSearchPageItems =>
