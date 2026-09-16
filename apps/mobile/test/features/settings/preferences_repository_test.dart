@@ -29,15 +29,18 @@ void main() {
     expect(await reconstructed.largeTextMode(), isTrue);
   });
 
-  test('boolean getters use explicit defaults when values are absent', () async {
-    final repository = DriftPreferencesRepository(database);
+  test(
+    'boolean getters use explicit defaults when values are absent',
+    () async {
+      final repository = DriftPreferencesRepository(database);
 
-    expect(await repository.wifiOnlyDownloads(), isFalse);
-    expect(await repository.wifiOnlyDownloads(defaultValue: true), isTrue);
-    expect(await repository.largeTextMode(), isFalse);
-    expect(await repository.largeTextMode(defaultValue: true), isTrue);
-    expect(await repository.preferredLocaleTag(), isNull);
-  });
+      expect(await repository.wifiOnlyDownloads(), isFalse);
+      expect(await repository.wifiOnlyDownloads(defaultValue: true), isTrue);
+      expect(await repository.largeTextMode(), isFalse);
+      expect(await repository.largeTextMode(defaultValue: true), isTrue);
+      expect(await repository.preferredLocaleTag(), isNull);
+    },
+  );
 
   test('nullable locale removes the stored preference', () async {
     final repository = DriftPreferencesRepository(database);
