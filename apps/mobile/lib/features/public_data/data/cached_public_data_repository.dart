@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_initializing_formals
+
 import 'dart:async';
 
 import 'package:connuoc_viet/core/database/cache_freshness.dart';
@@ -289,7 +291,7 @@ String _failureKind(Object error) {
   return error is ApiFailure ? error.kind.name : error.runtimeType.toString();
 }
 
-_ResourceTimestamps _timestampsFor(Object value) {
+_ResourceTimestamps _timestampsFor(Object? value) {
   if (value is LocationSearchPage) {
     return _ResourceTimestamps(generatedAtUtc: value.meta.generatedAtUtc);
   }
