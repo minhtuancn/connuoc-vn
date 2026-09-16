@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:connuoc_viet/core/database/app_database.dart';
+import 'package:connuoc_viet/core/database/app_database.dart' show AppDatabase;
 import 'package:connuoc_viet/core/network/cache_policy.dart';
 import 'package:connuoc_viet/features/public_data/data/drift_public_data_cache_store.dart';
 import 'package:connuoc_viet/features/public_data/domain/public_data_models.dart';
