@@ -33,10 +33,7 @@ RemoteResource<StationDetails> stationResource(
   );
 }
 
-OfflinePackManifest manifest(
-  String version, {
-  String packId = 'pack-A',
-}) {
+OfflinePackManifest manifest(String version, {String packId = 'pack-A'}) {
   return OfflinePackManifest(
     packId: packId,
     version: version,
@@ -75,12 +72,11 @@ Future<void> seedVersionOne(
   DriftPublicDataCacheStore cacheStore,
 ) async {
   await cacheStore.putStation(
-    stationResource(
-      'station-old',
-      fetchedAtUtc: DateTime.utc(2026, 9, 15, 3),
-    ),
+    stationResource('station-old', fetchedAtUtc: DateTime.utc(2026, 9, 15, 3)),
   );
-  await database.into(database.offlineManifests).insert(
+  await database
+      .into(database.offlineManifests)
+      .insert(
         OfflineManifestsCompanion.insert(
           packId: 'pack-A',
           version: '1',
@@ -94,14 +90,18 @@ Future<void> seedVersionOne(
           installedAtUtc: DateTime.utc(2026, 9, 15, 1),
         ),
       );
-  await database.into(database.offlinePackEntries).insert(
+  await database
+      .into(database.offlinePackEntries)
+      .insert(
         OfflinePackEntriesCompanion.insert(
           packId: 'pack-A',
           entityType: 'station',
           entityKey: cacheKeyForStation('station-old'),
         ),
       );
-  await database.into(database.favorites).insert(
+  await database
+      .into(database.favorites)
+      .insert(
         FavoritesCompanion.insert(
           stationId: 'favorite-station',
           createdAtUtc: DateTime.utc(2026, 9, 15),
@@ -139,9 +139,9 @@ void main() {
     final existing = await store.getManifest('pack-A');
     expect(existing?.version, '1');
 
-    final entries = await (database.select(database.offlinePackEntries)
-          ..where((table) => table.packId.equals('pack-A')))
-        .get();
+    final entries = await (database.select(
+      database.offlinePackEntries,
+    )..where((table) => table.packId.equals('pack-A'))).get();
     expect(entries, hasLength(1));
     expect(entries.single.entityKey, cacheKeyForStation('station-old'));
 
@@ -150,52 +150,58 @@ void main() {
     expect(await database.select(database.favorites).get(), hasLength(1));
   });
 
-  test('successful replacement exposes new manifest and membership atomically', () async {
-    final store = DriftOfflinePackStore(database);
-    final dataset = replacementDataset();
+  test(
+    'successful replacement exposes new manifest and membership atomically',
+    () async {
+      final store = DriftOfflinePackStore(database);
+      final dataset = replacementDataset();
 
-    await store.replaceValidatedDataset(dataset);
+      await store.replaceValidatedDataset(dataset);
 
-    final installed = await store.getManifest('pack-A');
-    expect(installed?.version, '2');
-    expect(installed?.schemaVersion, 1);
-    expect(installed?.checksum, 'sha256-2');
-    expect(installed?.contentSummary, {'stations': 1});
-    expect(installed?.sourceSummary, {
-      'sources': ['fixture'],
-    });
-    expect(installed?.minimumAppVersion, '1.0.0');
-    expect(installed?.generatedAtUtc, dataset.manifest.generatedAtUtc);
-    expect(installed?.expiresAtUtc, dataset.manifest.expiresAtUtc);
-    expect(installed?.installedAtUtc, dataset.manifest.installedAtUtc);
+      final installed = await store.getManifest('pack-A');
+      expect(installed?.version, '2');
+      expect(installed?.schemaVersion, 1);
+      expect(installed?.checksum, 'sha256-2');
+      expect(installed?.contentSummary, {'stations': 1});
+      expect(installed?.sourceSummary, {
+        'sources': ['fixture'],
+      });
+      expect(installed?.minimumAppVersion, '1.0.0');
+      expect(installed?.generatedAtUtc, dataset.manifest.generatedAtUtc);
+      expect(installed?.expiresAtUtc, dataset.manifest.expiresAtUtc);
+      expect(installed?.installedAtUtc, dataset.manifest.installedAtUtc);
 
-    final entries = await (database.select(database.offlinePackEntries)
-          ..where((table) => table.packId.equals('pack-A')))
-        .get();
-    expect(entries, hasLength(1));
-    expect(entries.single.entityType, 'station');
-    expect(entries.single.entityKey, cacheKeyForStation('station-new'));
+      final entries = await (database.select(
+        database.offlinePackEntries,
+      )..where((table) => table.packId.equals('pack-A'))).get();
+      expect(entries, hasLength(1));
+      expect(entries.single.entityType, 'station');
+      expect(entries.single.entityKey, cacheKeyForStation('station-new'));
 
-    expect(await cacheStore.getStation('station-new'), isNotNull);
-    expect(await database.select(database.favorites).get(), hasLength(1));
-  });
+      expect(await cacheStore.getStation('station-new'), isNotNull);
+      expect(await database.select(database.favorites).get(), hasLength(1));
+    },
+  );
 
-  test('remove deletes pack metadata without deleting shared cache or favorites', () async {
-    final store = DriftOfflinePackStore(database);
-    await store.replaceValidatedDataset(replacementDataset());
+  test(
+    'remove deletes pack metadata without deleting shared cache or favorites',
+    () async {
+      final store = DriftOfflinePackStore(database);
+      await store.replaceValidatedDataset(replacementDataset());
 
-    await store.remove('pack-A');
+      await store.remove('pack-A');
 
-    expect(await store.getManifest('pack-A'), isNull);
-    expect(
-      await (database.select(database.offlinePackEntries)
-            ..where((table) => table.packId.equals('pack-A')))
-          .get(),
-      isEmpty,
-    );
-    expect(await cacheStore.getStation('station-new'), isNotNull);
-    expect(await database.select(database.favorites).get(), hasLength(1));
-  });
+      expect(await store.getManifest('pack-A'), isNull);
+      expect(
+        await (database.select(
+          database.offlinePackEntries,
+        )..where((table) => table.packId.equals('pack-A'))).get(),
+        isEmpty,
+      );
+      expect(await cacheStore.getStation('station-new'), isNotNull);
+      expect(await database.select(database.favorites).get(), hasLength(1));
+    },
+  );
 
   test('listManifests returns installed packs ordered by pack id', () async {
     final store = DriftOfflinePackStore(database);
