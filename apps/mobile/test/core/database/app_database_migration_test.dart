@@ -1,6 +1,8 @@
 import 'package:connuoc_viet/core/database/app_database.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/app_database_migration_fixture.dart';
+
 void main() {
   test('current mobile database schema version is 2', () async {
     final database = AppDatabase.inMemory();
