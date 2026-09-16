@@ -44,33 +44,36 @@ void main() {
     await database.close();
   });
 
-  test('station survives cache-store reconstruction with full provenance', () async {
-    final station = StationDetails.fromJson(fixture('station'));
-    final firstStore = DriftPublicDataCacheStore(database);
+  test(
+    'station survives cache-store reconstruction with full provenance',
+    () async {
+      final station = StationDetails.fromJson(fixture('station'));
+      final firstStore = DriftPublicDataCacheStore(database);
 
-    await firstStore.putStation(cached(station));
+      await firstStore.putStation(cached(station));
 
-    final reconstructedStore = DriftPublicDataCacheStore(database);
-    final restored = await reconstructedStore.getStation(station.id);
+      final reconstructedStore = DriftPublicDataCacheStore(database);
+      final restored = await reconstructedStore.getStation(station.id);
 
-    expect(restored, isNotNull);
-    expectPolicyAndFetchTime(restored!);
-    expect(restored.value.id, station.id);
-    expect(restored.value.name, station.name);
-    expect(restored.value.timeZone, station.timeZone);
-    expect(restored.value.defaultDatumId, 'local-gauge-fixture');
-    expect(restored.value.meta.generatedAtUtc, station.meta.generatedAtUtc);
-    expect(restored.value.provenance?.sourceKey, 'public-api-fixture');
-    expect(
-      restored.value.provenance?.rawChecksumSha256,
-      'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-    );
-    expect(
-      restored.value.provenance?.observedAtUtc,
-      DateTime.parse('2026-09-15T01:00:00Z'),
-    );
-    expect(restored.value.aliases, station.aliases);
-  });
+      expect(restored, isNotNull);
+      expectPolicyAndFetchTime(restored!);
+      expect(restored.value.id, station.id);
+      expect(restored.value.name, station.name);
+      expect(restored.value.timeZone, station.timeZone);
+      expect(restored.value.defaultDatumId, 'local-gauge-fixture');
+      expect(restored.value.meta.generatedAtUtc, station.meta.generatedAtUtc);
+      expect(restored.value.provenance?.sourceKey, 'public-api-fixture');
+      expect(
+        restored.value.provenance?.rawChecksumSha256,
+        'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      );
+      expect(
+        restored.value.provenance?.observedAtUtc,
+        DateTime.parse('2026-09-15T01:00:00Z'),
+      );
+      expect(restored.value.aliases, station.aliases);
+    },
+  );
 
   test('search summary never erases station detail-only metadata', () async {
     final station = StationDetails.fromJson(fixture('station'));
@@ -93,69 +96,81 @@ void main() {
     expectPolicyAndFetchTime(restoredSearch);
   });
 
-  test('tide round trip preserves datum, unit, timezone and model provenance', () async {
-    final station = StationDetails.fromJson(fixture('station'));
-    final tide = TideSeries.fromJson(fixture('tide'));
-    final request = TideRequest(
-      stationId: tide.stationId,
-      startUtc: tide.startUtc,
-      endUtc: tide.endUtc,
-      intervalSeconds: tide.intervalSeconds,
-    );
-    final firstStore = DriftPublicDataCacheStore(database);
+  test(
+    'tide round trip preserves datum, unit, timezone and model provenance',
+    () async {
+      final station = StationDetails.fromJson(fixture('station'));
+      final tide = TideSeries.fromJson(fixture('tide'));
+      final request = TideRequest(
+        stationId: tide.stationId,
+        startUtc: tide.startUtc,
+        endUtc: tide.endUtc,
+        intervalSeconds: tide.intervalSeconds,
+      );
+      final firstStore = DriftPublicDataCacheStore(database);
 
-    await firstStore.putStation(cached(station));
-    await firstStore.putTide(request, cached(tide));
+      await firstStore.putStation(cached(station));
+      await firstStore.putTide(request, cached(tide));
 
-    final reconstructedStore = DriftPublicDataCacheStore(database);
-    final restored = await reconstructedStore.getTide(request);
+      final reconstructedStore = DriftPublicDataCacheStore(database);
+      final restored = await reconstructedStore.getTide(request);
 
-    expect(restored, isNotNull);
-    expectPolicyAndFetchTime(restored!);
-    expect(restored.value.datumId, tide.datumId);
-    expect(restored.value.unit, WaterLevelUnit.m);
-    expect(restored.value.timeZone, 'Asia/Ho_Chi_Minh');
-    expect(restored.value.phaseConvention, tide.phaseConvention);
-    expect(restored.value.referenceEpochUtc, tide.referenceEpochUtc);
-    expect(restored.value.generatedAtUtc, tide.generatedAtUtc);
-    expect(restored.value.provenance.sourceKey, 'public-api-fixture');
-    expect(restored.value.provenance.importRunId, tide.provenance.importRunId);
-    expect(restored.value.points, hasLength(3));
-    expect(restored.value.points.first.timestampUtc, tide.points.first.timestampUtc);
-    expect(restored.value.points.first.value, tide.points.first.value);
-  });
+      expect(restored, isNotNull);
+      expectPolicyAndFetchTime(restored!);
+      expect(restored.value.datumId, tide.datumId);
+      expect(restored.value.unit, WaterLevelUnit.m);
+      expect(restored.value.timeZone, 'Asia/Ho_Chi_Minh');
+      expect(restored.value.phaseConvention, tide.phaseConvention);
+      expect(restored.value.referenceEpochUtc, tide.referenceEpochUtc);
+      expect(restored.value.generatedAtUtc, tide.generatedAtUtc);
+      expect(restored.value.provenance.sourceKey, 'public-api-fixture');
+      expect(
+        restored.value.provenance.importRunId,
+        tide.provenance.importRunId,
+      );
+      expect(restored.value.points, hasLength(3));
+      expect(
+        restored.value.points.first.timestampUtc,
+        tide.points.first.timestampUtc,
+      );
+      expect(restored.value.points.first.value, tide.points.first.value);
+    },
+  );
 
-  test('water-level round trip preserves observation provenance and page order', () async {
-    final page = WaterLevelPage.fromJson(fixture('water_levels'));
-    final request = WaterLevelRequest(stationId: page.station.id, limit: 20);
-    final firstStore = DriftPublicDataCacheStore(database);
+  test(
+    'water-level round trip preserves observation provenance and page order',
+    () async {
+      final page = WaterLevelPage.fromJson(fixture('water_levels'));
+      final request = WaterLevelRequest(stationId: page.station.id, limit: 20);
+      final firstStore = DriftPublicDataCacheStore(database);
 
-    await firstStore.putWaterLevels(request, cached(page));
+      await firstStore.putWaterLevels(request, cached(page));
 
-    final reconstructedStore = DriftPublicDataCacheStore(database);
-    final restored = await reconstructedStore.getWaterLevels(request);
+      final reconstructedStore = DriftPublicDataCacheStore(database);
+      final restored = await reconstructedStore.getWaterLevels(request);
 
-    expect(restored, isNotNull);
-    expectPolicyAndFetchTime(restored!);
-    expect(restored.value.station.id, page.station.id);
-    expect(restored.value.station.timeZone, 'Asia/Ho_Chi_Minh');
-    expect(restored.value.station.defaultDatumId, 'local-gauge-fixture');
-    expect(restored.value.meta.generatedAtUtc, page.meta.generatedAtUtc);
-    expect(
-      restored.value.meta.latestObservedAtUtc,
-      DateTime.parse('2026-09-15T01:00:00Z'),
-    );
-    expect(restored.value.meta.nextCursor, 'eyJvZmZzZXQiOjF9');
+      expect(restored, isNotNull);
+      expectPolicyAndFetchTime(restored!);
+      expect(restored.value.station.id, page.station.id);
+      expect(restored.value.station.timeZone, 'Asia/Ho_Chi_Minh');
+      expect(restored.value.station.defaultDatumId, 'local-gauge-fixture');
+      expect(restored.value.meta.generatedAtUtc, page.meta.generatedAtUtc);
+      expect(
+        restored.value.meta.latestObservedAtUtc,
+        DateTime.parse('2026-09-15T01:00:00Z'),
+      );
+      expect(restored.value.meta.nextCursor, 'eyJvZmZzZXQiOjF9');
 
-    final observation = restored.value.items.single;
-    expect(observation.sourceRecordKey, 'public-api-obs-2');
-    expect(observation.value, 130.2);
-    expect(observation.unit, WaterLevelUnit.cm);
-    expect(observation.datumId, 'local-gauge-fixture');
-    expect(observation.qualityState, QualityState.good);
-    expect(observation.observedAtUtc, DateTime.parse('2026-09-15T01:00:00Z'));
-    expect(observation.provenance.sourceKey, 'public-api-fixture');
-    expect(observation.provenance.parserVersion, 'fixture-parser@1');
-    expect(observation.provenance.normalizerVersion, 'fixture-normalizer@1');
-  });
+      final observation = restored.value.items.single;
+      expect(observation.sourceRecordKey, 'public-api-obs-2');
+      expect(observation.value, 130.2);
+      expect(observation.unit, WaterLevelUnit.cm);
+      expect(observation.datumId, 'local-gauge-fixture');
+      expect(observation.qualityState, QualityState.good);
+      expect(observation.observedAtUtc, DateTime.parse('2026-09-15T01:00:00Z'));
+      expect(observation.provenance.sourceKey, 'public-api-fixture');
+      expect(observation.provenance.parserVersion, 'fixture-parser@1');
+      expect(observation.provenance.normalizerVersion, 'fixture-normalizer@1');
+    },
+  );
 }
