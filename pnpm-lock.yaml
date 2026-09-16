@@ -212,6 +212,9 @@ importers:
 
   services/api:
     dependencies:
+      '@connuoc/geo':
+        specifier: workspace:*
+        version: link:../../packages/geo
       '@connuoc/lunar-calendar':
         specifier: workspace:*
         version: link:../../packages/lunar-calendar
