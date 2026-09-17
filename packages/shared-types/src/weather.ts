@@ -9,6 +9,7 @@ const WindSpeedMsSchema = z.number().finite().min(0).max(200);
 const WindDirectionDegSchema = z.number().finite().min(0).max(360);
 const VisibilityMetersSchema = z.number().finite().min(0).max(100_000);
 const PrecipitationMmSchema = z.number().finite().min(0).max(5_000);
+const UvIndexSchema = z.number().finite().min(0).max(100);
 const WeatherCodeSchema = z.number().int().min(0).max(99);
 
 const DateOnlySchema = z
@@ -72,6 +73,7 @@ const InstantMetricShape = {
   cloudCoverPct: PercentageSchema.nullable(),
   weatherCode: WeatherCodeSchema,
   visibilityM: VisibilityMetersSchema.nullable(),
+  uvIndex: UvIndexSchema.nullable(),
   precipitationMm: PrecipitationMmSchema.nullable(),
   rainMm: PrecipitationMmSchema.nullable(),
 } as const;
@@ -102,6 +104,7 @@ export const DailyWeatherPointSchema = z
     temperatureMinC: TemperatureCelsiusSchema,
     temperatureMaxC: TemperatureCelsiusSchema,
     weatherCode: WeatherCodeSchema,
+    uvIndexMax: UvIndexSchema.nullable(),
     precipitationProbabilityMaxPct: PercentageSchema.nullable(),
     precipitationMm: PrecipitationMmSchema.nullable(),
     rainMm: PrecipitationMmSchema.nullable(),
