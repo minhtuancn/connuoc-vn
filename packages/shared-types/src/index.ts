@@ -5,3 +5,4 @@ export * from './location.js';
 export * from './provider.js';
 export * from './source.js';
 export * from './water-level.js';
+export * from './weather.js';
