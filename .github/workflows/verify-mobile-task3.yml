@@ -1,0 +1,75 @@
+name: Verify mobile Task 3 persistence
+
+on:
+  push:
+    branches:
+      - phase-3/mobile-offline-persistence
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: phase-3/mobile-offline-persistence
+          fetch-depth: 0
+
+      - name: Setup Flutter 3.47.3
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.47.3'
+          channel: stable
+          cache: true
+
+      - name: Resolve locked dependencies
+        run: |
+          flutter pub get
+          git diff --exit-code -- pubspec.lock
+
+      - name: Format Task 3 sources
+        run: |
+          dart format \
+            lib/features/offline/domain/favorites_repository.dart \
+            lib/features/offline/data/drift_favorites_repository.dart \
+            lib/features/settings/domain/preferences_repository.dart \
+            lib/features/settings/data/drift_preferences_repository.dart \
+            test/features/offline/favorites_repository_test.dart \
+            test/features/settings/preferences_repository_test.dart
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Focused Task 3 tests
+        run: |
+          flutter test test/features/offline/favorites_repository_test.dart
+          flutter test test/features/settings/preferences_repository_test.dart
+          flutter test test/core/database/app_database_migration_test.dart
+
+      - name: Full Flutter tests
+        run: flutter test
+
+      - name: Commit verified formatting
+        working-directory: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add \
+            apps/mobile/lib/features/offline/domain/favorites_repository.dart \
+            apps/mobile/lib/features/offline/data/drift_favorites_repository.dart \
+            apps/mobile/lib/features/settings/domain/preferences_repository.dart \
+            apps/mobile/lib/features/settings/data/drift_preferences_repository.dart \
+            apps/mobile/test/features/offline/favorites_repository_test.dart \
+            apps/mobile/test/features/settings/preferences_repository_test.dart
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'build(mobile): verify favorites and preferences persistence'
+          git push origin HEAD:phase-3/mobile-offline-persistence
