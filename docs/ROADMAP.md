@@ -2,6 +2,8 @@
 
 Roadmap ưu tiên tính đúng dữ liệu và khả năng sử dụng thực tế trước khi mở rộng feature.
 
+Trạng thái triển khai ngắn gọn được cập nhật tại [`docs/PROJECT-STATUS.md`](PROJECT-STATUS.md). Roadmap này mô tả hướng dài hạn; GitHub issues/PRs là nguồn thực thi chi tiết.
+
 ## Phase 0 — Foundation
 
 ### Goal
@@ -127,6 +129,8 @@ Android/iOS app có thể dùng thực tế cho lịch con nước cơ bản.
 - Downloaded station data remains usable offline.
 - Core app usable with 200% text scale target where platform layout permits.
 
+Current execution status is tracked by Epic #39: #40 and #41 are merged; #42 is active in draft PR #50; #43–#47 remain open.
+
 ---
 
 ## Phase 4 — Public Web & Admin
@@ -169,8 +173,8 @@ Từ 01/07/2025, mô hình chính quyền địa phương hiện hành của Vi�
 
 ### Workstreams / dependency order
 
-- [ ] #53 Phase 5A — Vietnam location taxonomy + provider platform foundation.
-- [ ] #54 Phase 5B — Multi-provider weather forecasts + normalized public APIs.
+- [x] #53 Phase 5A — Vietnam location taxonomy + provider platform foundation — **completed and merged**.
+- [ ] #54 Phase 5B — Multi-provider weather forecasts + normalized public APIs — **in final verification on PR #102**.
 - [ ] #55 Phase 5C — Rainfall observations/history/forecast + accumulation features.
 - [ ] #56 Phase 5D — River network enrichment + GEOGLOWS/GloFAS discharge forecasts.
 - [ ] #57 Phase 5E — Gauge calibration, rating curves + river-rise forecasts.
@@ -179,6 +183,8 @@ Từ 01/07/2025, mô hình chính quyền địa phương hiện hành của Vi�
 - [ ] #60 Phase 5H — Admin provider configuration, health, quota + usage operations.
 - [ ] #61 Phase 5I — Mobile/web weather, river + flood-risk journeys with location UX.
 - [ ] #62 Phase 5J — Pilot calibration, backtesting + Phase 5 exit gate.
+
+Phase 5 snapshot 2026-09-17: **1 workstream completed, 1 in final verification, 8 remaining**. This means the subsystem is well underway but is not yet close to the Phase 5 exit gate.
 
 Dependency graph:
 

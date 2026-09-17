@@ -34,12 +34,13 @@ try {
     '0002_tide_models.sql',
     '0003_admin_auth.sql',
     '0004_weather_provider_foundation.sql',
+    '0005_weather_forecasts.sql',
   ];
   const appliedMigrations = await client.query(
     'SELECT migration_name FROM schema_migrations ORDER BY migration_name ASC',
   );
   if (JSON.stringify(appliedMigrations.rows.map((row) => row.migration_name)) !== JSON.stringify(expectedMigrations)) {
-    throw new Error('Expected migrations 0001 through 0004 to be applied in deterministic order.');
+    throw new Error('Expected migrations 0001 through 0005 to be applied in deterministic order.');
   }
 
   const expectedTables = [
@@ -62,6 +63,10 @@ try {
     'provider_configs',
     'provider_capabilities',
     'provider_health_events',
+    'weather_forecast_runs',
+    'weather_current_points',
+    'weather_hourly_points',
+    'weather_daily_points',
   ];
   const tables = await client.query(
     `SELECT table_name FROM information_schema.tables
@@ -81,6 +86,22 @@ try {
   );
   if ((forbiddenCredentialColumns.rowCount ?? 0) !== 0) {
     throw new Error('Provider config schema contains raw credential-like columns.');
+  }
+
+  const weatherColumns = await client.query(
+    `SELECT column_name FROM information_schema.columns
+     WHERE table_schema = 'public' AND table_name = 'weather_forecast_runs'`,
+  );
+  const weatherColumnNames = new Set(weatherColumns.rows.map((row) => row.column_name));
+  for (const forbidden of ['request_latitude', 'request_longitude', 'user_latitude', 'user_longitude']) {
+    if (weatherColumnNames.has(forbidden)) {
+      throw new Error(`Weather history schema must not persist exact request coordinate column ${forbidden}.`);
+    }
+  }
+  for (const required of ['provider_grid', 'normalized_checksum', 'stale_after', 'source_registry_id']) {
+    if (!weatherColumnNames.has(required)) {
+      throw new Error(`Weather history schema is missing ${required}.`);
+    }
   }
 
   await client.query('BEGIN');
@@ -283,11 +304,13 @@ try {
     postgisVersion: postgis.rows[0].version,
     checkedTables: expectedTables.length,
     checks: [
-      'migration-order-0001-through-0004',
+      'migration-order-0001-through-0005',
       'spatial-query',
       'administrative-area-constraints',
       'provider-policy-schema',
       'provider-secret-column-redaction',
+      'weather-forecast-history-schema',
+      'weather-request-coordinate-non-persistence',
       'harmonic-tide-model-schema',
       'admin-token-hash-schema',
       'raw-payload-idempotency-constraint',
