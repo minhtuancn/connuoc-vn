@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import * as contracts from '../src/index.ts';
 
-const exported = contracts as unknown as Record<string, { parse: (value: unknown) => unknown; safeParse: (value: unknown) => { success: boolean } }>;
+const exported = contracts as unknown as Record<
+  string,
+  { parse: (value: unknown) => unknown; safeParse: (value: unknown) => { success: boolean } }
+>;
 
 const source = {
   sourceId: 'open-meteo-paid-hosted',
@@ -49,10 +52,13 @@ describe('weather contracts', () => {
       cloudCoverPct: 75,
       weatherCode: 61,
       visibilityM: null,
+      uvIndex: 7.1,
       precipitationMm: 1.4,
       rainMm: 1.4,
     }) as { kind: string };
-    const provenance = exported.WeatherSourceProvenanceSchema.parse(source) as { modelRunAt: string | null };
+    const provenance = exported.WeatherSourceProvenanceSchema.parse(source) as {
+      modelRunAt: string | null;
+    };
 
     expect(current.kind).toBe('MODEL_CURRENT');
     expect(provenance.modelRunAt).toBeNull();
@@ -72,15 +78,23 @@ describe('weather contracts', () => {
       cloudCoverPct: null,
       weatherCode: 3,
       visibilityM: null,
+      uvIndex: null,
       precipitationProbabilityPct: null,
       precipitationMm: 0,
       rainMm: null,
     };
 
     expect(exported.HourlyWeatherPointSchema.safeParse(valid).success).toBe(true);
-    expect(exported.HourlyWeatherPointSchema.safeParse({ ...valid, relativeHumidityPct: 101 }).success).toBe(false);
-    expect(exported.HourlyWeatherPointSchema.safeParse({ ...valid, precipitationProbabilityPct: -1 }).success).toBe(false);
-    expect(exported.HourlyWeatherPointSchema.safeParse({ ...valid, windDirectionDeg: 361 }).success).toBe(false);
+    expect(
+      exported.HourlyWeatherPointSchema.safeParse({ ...valid, relativeHumidityPct: 101 }).success,
+    ).toBe(false);
+    expect(
+      exported.HourlyWeatherPointSchema.safeParse({ ...valid, precipitationProbabilityPct: -1 })
+        .success,
+    ).toBe(false);
+    expect(
+      exported.HourlyWeatherPointSchema.safeParse({ ...valid, windDirectionDeg: 361 }).success,
+    ).toBe(false);
   });
 
   it('bounds hourly and daily response horizons and keeps public metadata vendor-neutral', () => {
@@ -97,6 +111,7 @@ describe('weather contracts', () => {
       cloudCoverPct: 70,
       weatherCode: 3,
       visibilityM: 10000,
+      uvIndex: 4.8,
       precipitationProbabilityPct: 20,
       precipitationMm: 0,
       rainMm: 0,
@@ -107,6 +122,7 @@ describe('weather contracts', () => {
       temperatureMinC: 25,
       temperatureMaxC: 32,
       weatherCode: 61,
+      uvIndexMax: 9.2,
       precipitationProbabilityMaxPct: 70,
       precipitationMm: 12,
       rainMm: 12,
@@ -120,12 +136,29 @@ describe('weather contracts', () => {
       fallbackUsed: false,
     };
 
-    expect(exported.HourlyWeatherResponseSchema.safeParse({ ...base, points: [hourlyPoint] }).success).toBe(true);
-    expect(exported.HourlyWeatherResponseSchema.safeParse({ ...base, points: Array.from({ length: 169 }, () => hourlyPoint) }).success).toBe(false);
-    expect(exported.DailyWeatherResponseSchema.safeParse({ ...base, points: [dailyPoint] }).success).toBe(true);
-    expect(exported.DailyWeatherResponseSchema.safeParse({ ...base, points: Array.from({ length: 16 }, () => dailyPoint) }).success).toBe(false);
+    expect(
+      exported.HourlyWeatherResponseSchema.safeParse({ ...base, points: [hourlyPoint] }).success,
+    ).toBe(true);
+    expect(
+      exported.HourlyWeatherResponseSchema.safeParse({
+        ...base,
+        points: Array.from({ length: 169 }, () => hourlyPoint),
+      }).success,
+    ).toBe(false);
+    expect(
+      exported.DailyWeatherResponseSchema.safeParse({ ...base, points: [dailyPoint] }).success,
+    ).toBe(true);
+    expect(
+      exported.DailyWeatherResponseSchema.safeParse({
+        ...base,
+        points: Array.from({ length: 16 }, () => dailyPoint),
+      }).success,
+    ).toBe(false);
 
-    const parsed = exported.HourlyWeatherResponseSchema.parse({ ...base, points: [hourlyPoint] }) as Record<string, unknown>;
+    const parsed = exported.HourlyWeatherResponseSchema.parse({
+      ...base,
+      points: [hourlyPoint],
+    }) as Record<string, unknown>;
     expect(JSON.stringify(parsed)).not.toContain('providerKey');
     expect(JSON.stringify(parsed)).not.toContain('secretRef');
   });
