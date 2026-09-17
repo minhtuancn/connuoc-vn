@@ -234,4 +234,85 @@ describe('rainfall repository', () => {
       ]),
     ).rejects.toThrow();
   });
+
+  it('returns nearest compatible last-known-good only within distance and stale grace', async () => {
+    const runId = await repository.saveBundle(
+      providerConfigId,
+      bundle,
+      '2026-09-17T03:10:00Z',
+    );
+
+    const lkgRepository = repository as unknown as {
+      findNearestLastKnownGood(query: {
+        capability: 'rainfall.satellite' | 'rainfall.forecast';
+        coordinate: { latitude: number; longitude: number };
+        atUtc: string;
+        maxDistanceKm: number;
+        staleGraceSeconds: number;
+      }): Promise<
+        | {
+            runId: string;
+            providerConfigId: string;
+            freshnessSeconds: number;
+            staleAfterUtc: string;
+            distanceKm: number;
+            bundle: NormalizedRainfallBundle;
+          }
+        | null
+      >;
+    };
+
+    const eligible = await lkgRepository.findNearestLastKnownGood({
+      capability: 'rainfall.satellite',
+      coordinate: { latitude: 19.51, longitude: 105.51 },
+      atUtc: '2026-09-17T03:30:00Z',
+      maxDistanceKm: 25,
+      staleGraceSeconds: 3600,
+    });
+    expect(eligible).toMatchObject({
+      runId,
+      providerConfigId,
+      freshnessSeconds: 1800,
+      staleAfterUtc: '2026-09-17T03:10:00Z',
+      bundle: {
+        capability: 'rainfall.satellite',
+        records: [
+          { id: 'rain:imerg:0130', productKind: 'SATELLITE_ESTIMATE' },
+          { id: 'rain:imerg:0200', productKind: 'SATELLITE_ESTIMATE' },
+        ],
+      },
+    });
+    expect(eligible?.distanceKm).toBeGreaterThan(0);
+    expect(eligible?.distanceKm).toBeLessThan(25);
+
+    await expect(
+      lkgRepository.findNearestLastKnownGood({
+        capability: 'rainfall.forecast',
+        coordinate: { latitude: 19.51, longitude: 105.51 },
+        atUtc: '2026-09-17T03:30:00Z',
+        maxDistanceKm: 25,
+        staleGraceSeconds: 3600,
+      }),
+    ).resolves.toBeNull();
+
+    await expect(
+      lkgRepository.findNearestLastKnownGood({
+        capability: 'rainfall.satellite',
+        coordinate: { latitude: 10, longitude: 110 },
+        atUtc: '2026-09-17T03:30:00Z',
+        maxDistanceKm: 25,
+        staleGraceSeconds: 3600,
+      }),
+    ).resolves.toBeNull();
+
+    await expect(
+      lkgRepository.findNearestLastKnownGood({
+        capability: 'rainfall.satellite',
+        coordinate: { latitude: 19.51, longitude: 105.51 },
+        atUtc: '2026-09-17T04:30:01Z',
+        maxDistanceKm: 25,
+        staleGraceSeconds: 3600,
+      }),
+    ).resolves.toBeNull();
+  });
 });
