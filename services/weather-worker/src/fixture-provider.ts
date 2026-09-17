@@ -46,6 +46,10 @@ function instantMetrics(offset = 0) {
   };
 }
 
+function isoHour(hour: number): string {
+  return new Date(Date.UTC(2026, 8, 17, hour)).toISOString().replace('.000Z', 'Z');
+}
+
 export class FixtureProviderAdapter
   implements WeatherHydrologyProviderAdapter, WeatherForecastAdapter
 {
@@ -112,7 +116,7 @@ export class FixtureProviderAdapter
         source: FIXTURE_SOURCE,
         points: Array.from({ length: hours }, (_, index) => ({
           kind: 'FORECAST' as const,
-          validAt: new Date(Date.UTC(2026, 8, 17, 2 + index)).toISOString(),
+          validAt: isoHour(2 + index),
           ...instantMetrics(index),
           precipitationProbabilityPct: 20 + Math.min(index * 5, 70),
         })),
