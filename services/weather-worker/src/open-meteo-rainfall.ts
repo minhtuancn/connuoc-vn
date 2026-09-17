@@ -43,6 +43,10 @@ function requiredArray(record: Record<string, unknown>, key: string): unknown[] 
   return value;
 }
 
+function compactInstant(value: Date): string {
+  return value.toISOString().replace('.000Z', 'Z');
+}
+
 function utcInstantFromOpenMeteo(value: unknown): string {
   if (typeof value !== 'string' || value.trim().length === 0) {
     throw new TypeError('Open-Meteo rainfall timestamp is invalid');
@@ -52,7 +56,7 @@ function utcInstantFromOpenMeteo(value: unknown): string {
   if (!Number.isFinite(millis)) {
     throw new TypeError('Open-Meteo rainfall timestamp is invalid');
   }
-  return new Date(millis).toISOString().replace('.000Z', 'Z');
+  return compactInstant(new Date(millis));
 }
 
 function validateRequest(request: RainfallAdapterRequest): number {
@@ -147,11 +151,11 @@ export class OpenMeteoRainfallAdapter implements RainfallProviderAdapter {
       throw new TypeError('Open-Meteo rainfall hourly series lengths do not match');
     }
 
-    const fetchedAt = this.now().toISOString();
+    const fetchedAt = compactInstant(this.now());
     const records = times.map((time, index) => {
       const validEnd = utcInstantFromOpenMeteo(time);
       const endMs = Date.parse(validEnd);
-      const validStart = new Date(endMs - 3_600_000).toISOString().replace('.000Z', 'Z');
+      const validStart = compactInstant(new Date(endMs - 3_600_000));
       const amountMm = precipitation[index];
       const rainMm = rain[index];
       if (typeof amountMm !== 'number' || !Number.isFinite(amountMm) || amountMm < 0) {
