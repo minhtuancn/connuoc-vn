@@ -41,7 +41,7 @@ export class WeatherAdapterFactory implements WeatherAdapterFactoryPort {
     };
 
     if (provider.providerType === 'fixture') {
-      return new FixtureProviderAdapter(context);
+      return new FixtureProviderAdapter(context, this.now);
     }
 
     if (provider.providerType === 'open-meteo') {
