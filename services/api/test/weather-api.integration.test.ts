@@ -122,6 +122,12 @@ describe('public weather APIs', () => {
   });
 
   it('falls back to persisted nearest-grid cache as STALE when the live provider is disabled', async () => {
+    await client.query(
+      `UPDATE weather_forecast_runs
+       SET stale_after = now() - interval '1 minute'
+       WHERE provider_config_id = $1 AND capability = 'weather.current'`,
+      [providerId],
+    );
     await client.query('UPDATE provider_configs SET enabled = false WHERE id = $1', [providerId]);
 
     const response = await fastify.inject({
