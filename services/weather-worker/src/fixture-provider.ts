@@ -19,14 +19,24 @@ const FIXTURE_GRID = {
   distanceFromRequestKm: null,
 };
 
-const FIXTURE_SOURCE = {
-  sourceId: 'synthetic-weather-fixture',
-  attributionText: 'Con Nước synthetic fixture',
-  attributionUrl: null,
-  modelId: 'fixture-model',
-  modelRunAt: '2026-09-17T00:00:00Z',
-  fetchedAt: '2026-09-17T02:01:00Z',
-};
+const DEFAULT_FIXTURE_NOW = () => new Date('2026-09-17T02:01:00Z');
+
+function compactInstant(value: Date): string {
+  const iso = value.toISOString();
+  return iso.endsWith('.000Z') ? iso.replace('.000Z', 'Z') : iso;
+}
+
+function fixtureSource(now: Date) {
+  if (!Number.isFinite(now.getTime())) throw new RangeError('fixture clock must return a valid Date');
+  return {
+    sourceId: 'synthetic-weather-fixture',
+    attributionText: 'Con Nước synthetic fixture',
+    attributionUrl: null,
+    modelId: 'fixture-model',
+    modelRunAt: '2026-09-17T00:00:00Z',
+    fetchedAt: compactInstant(now),
+  };
+}
 
 function instantMetrics(offset = 0) {
   return {
@@ -57,7 +67,10 @@ export class FixtureProviderAdapter
   readonly context: ProviderContext;
   private readonly capabilities: ReadonlySet<ProviderCapability>;
 
-  constructor(context: ProviderContext) {
+  constructor(
+    context: ProviderContext,
+    private readonly now: () => Date = DEFAULT_FIXTURE_NOW,
+  ) {
     this.context = {
       ...context,
       capabilities: [...context.capabilities],
@@ -90,11 +103,13 @@ export class FixtureProviderAdapter
       throw new Error(`Fixture provider does not support capability ${request.capability}`);
     }
 
+    const source = fixtureSource(this.now());
+
     if (request.capability === 'weather.current') {
       return {
         capability: 'weather.current',
         grid: FIXTURE_GRID,
-        source: FIXTURE_SOURCE,
+        source,
         data: {
           kind: 'MODEL_CURRENT',
           validAt: '2026-09-17T02:00:00Z',
@@ -113,7 +128,7 @@ export class FixtureProviderAdapter
       return {
         capability: 'weather.hourlyForecast',
         grid: FIXTURE_GRID,
-        source: FIXTURE_SOURCE,
+        source,
         points: Array.from({ length: hours }, (_, index) => ({
           kind: 'FORECAST' as const,
           validAt: isoHour(2 + index),
@@ -131,7 +146,7 @@ export class FixtureProviderAdapter
     return {
       capability: 'weather.dailyForecast',
       grid: FIXTURE_GRID,
-      source: FIXTURE_SOURCE,
+      source,
       points: Array.from({ length: days }, (_, index) => ({
         kind: 'FORECAST' as const,
         validDate: new Date(Date.UTC(2026, 8, 17 + index)).toISOString().slice(0, 10),
