@@ -126,7 +126,7 @@ connuoc-vn/
 
 ## Trạng thái
 
-Repository đã vượt giai đoạn Foundation/pre-MVP: **Phase 2 Backend & Data Platform đã có exit gate**, Mobile MVP đang triển khai theo Phase 3, **Phase 5A Location + Provider Platform đã hoàn tất**, và **Phase 5B Weather Forecasts đang ở vòng final verification trên PR #102**.
+Repository đã vượt giai đoạn Foundation/pre-MVP: **Phase 2 Backend & Data Platform đã có exit gate**, Mobile MVP đang triển khai theo Phase 3, và **Phase 5A Location + Provider Platform cùng Phase 5B Weather Forecasts đã hoàn tất và merge vào `main`**.
 
 Toàn sản phẩm **chưa gần hoàn thiện production**: rainfall intelligence, river discharge, calibrated river-rise, flood risk, official alerts, phần lớn mobile/web journeys, pilot/backtesting và store-production vẫn còn. Xem trạng thái chi tiết, dependency và critical path tại [docs/PROJECT-STATUS.md](docs/PROJECT-STATUS.md).
 
