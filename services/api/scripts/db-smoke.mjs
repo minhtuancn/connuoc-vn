@@ -35,12 +35,13 @@ try {
     '0003_admin_auth.sql',
     '0004_weather_provider_foundation.sql',
     '0005_weather_forecasts.sql',
+    '0006_rainfall.sql',
   ];
   const appliedMigrations = await client.query(
     'SELECT migration_name FROM schema_migrations ORDER BY migration_name ASC',
   );
   if (JSON.stringify(appliedMigrations.rows.map((row) => row.migration_name)) !== JSON.stringify(expectedMigrations)) {
-    throw new Error('Expected migrations 0001 through 0005 to be applied in deterministic order.');
+    throw new Error('Expected migrations 0001 through 0006 to be applied in deterministic order.');
   }
 
   const expectedTables = [
@@ -67,6 +68,9 @@ try {
     'weather_current_points',
     'weather_hourly_points',
     'weather_daily_points',
+    'rainfall_runs',
+    'rainfall_records',
+    'rainfall_accumulations',
   ];
   const tables = await client.query(
     `SELECT table_name FROM information_schema.tables
@@ -101,6 +105,22 @@ try {
   for (const required of ['provider_grid', 'normalized_checksum', 'stale_after', 'source_registry_id']) {
     if (!weatherColumnNames.has(required)) {
       throw new Error(`Weather history schema is missing ${required}.`);
+    }
+  }
+
+  const rainfallColumns = await client.query(
+    `SELECT column_name FROM information_schema.columns
+     WHERE table_schema = 'public' AND table_name = 'rainfall_runs'`,
+  );
+  const rainfallColumnNames = new Set(rainfallColumns.rows.map((row) => row.column_name));
+  for (const forbidden of ['request_latitude', 'request_longitude', 'user_latitude', 'user_longitude']) {
+    if (rainfallColumnNames.has(forbidden)) {
+      throw new Error(`Rainfall history schema must not persist exact request coordinate column ${forbidden}.`);
+    }
+  }
+  for (const required of ['spatial_point', 'normalized_checksum', 'stale_after', 'source_registry_id', 'object_uris']) {
+    if (!rainfallColumnNames.has(required)) {
+      throw new Error(`Rainfall history schema is missing ${required}.`);
     }
   }
 
@@ -205,6 +225,33 @@ try {
       [providerId],
     );
 
+    const rainfallRun = await client.query(
+      `INSERT INTO rainfall_runs (
+         provider_config_id, source_registry_id, capability, spatial_point,
+         spatial_representation, resolution_km, product_id, product_version,
+         fetched_at, stale_after, attribution_text, normalized_checksum
+       ) VALUES (
+         $1, 'ci-rain-source', 'rainfall.satellite',
+         ST_SetSRID(ST_MakePoint(105.5, 19.5), 4326)::geography,
+         'GRID_CELL', 10, 'ci-rain-product', '1',
+         '2026-09-17T02:00:00Z', '2026-09-17T03:00:00Z',
+         'CI rainfall fixture', $2
+       ) RETURNING id`,
+      [providerId, 'd'.repeat(64)],
+    );
+    const rainfallRunId = rainfallRun.rows[0].id;
+
+    await expectConstraintViolation('unsupported_rainfall_window', () => client.query(
+      `INSERT INTO rainfall_accumulations (
+         rainfall_run_id, end_at, window_seconds, amount_mm, coverage_ratio,
+         complete, derivation_version, input_record_ids, source_ids
+       ) VALUES (
+         $1, '2026-09-17T03:00:00Z', 7200, 4, 1,
+         true, 'rainfall-accum-v1', ARRAY['r1'], ARRAY['ci-rain-source']
+       )`,
+      [rainfallRunId],
+    ));
+
     await expectConstraintViolation('empty_provider_key', () => client.query(
       `INSERT INTO provider_configs (
          provider_key, provider_type, commercial_use_status, redistribution_status,
@@ -304,13 +351,16 @@ try {
     postgisVersion: postgis.rows[0].version,
     checkedTables: expectedTables.length,
     checks: [
-      'migration-order-0001-through-0005',
+      'migration-order-0001-through-0006',
       'spatial-query',
       'administrative-area-constraints',
       'provider-policy-schema',
       'provider-secret-column-redaction',
       'weather-forecast-history-schema',
       'weather-request-coordinate-non-persistence',
+      'rainfall-history-schema',
+      'rainfall-request-coordinate-non-persistence',
+      'rainfall-supported-window-constraint',
       'harmonic-tide-model-schema',
       'admin-token-hash-schema',
       'raw-payload-idempotency-constraint',
