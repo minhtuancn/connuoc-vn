@@ -7,10 +7,7 @@ import {
   WeatherAdapterFactory,
   type WeatherAdapterFactoryPort,
 } from '../src/modules/weather/weather-adapter.factory.js';
-import {
-  WeatherOrchestrationError,
-  WeatherOrchestrator,
-} from '../src/modules/weather/weather-orchestrator.js';
+import { WeatherOrchestrator } from '../src/modules/weather/weather-orchestrator.js';
 import type {
   WeatherProviderRuntimeStore,
   WeatherRuntimeProvider,
@@ -249,7 +246,7 @@ describe('weather provider orchestration', () => {
       () => 1000,
     );
 
-    await expect(orchestrator.fetch(request)).rejects.toMatchObject<Partial<WeatherOrchestrationError>>({
+    await expect(orchestrator.fetch(request)).rejects.toMatchObject({
       code: 'NO_PROVIDER_AVAILABLE',
     });
   });
