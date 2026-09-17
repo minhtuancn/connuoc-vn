@@ -46,16 +46,17 @@ export class WeatherAdapterFactory implements WeatherAdapterFactoryPort {
 
     if (provider.providerType === 'open-meteo') {
       const apiKey = await this.secretResolver.resolve(provider.secretRef);
+      const modelId = provider.modelAllowList[0];
       return new OpenMeteoWeatherAdapter({
         context,
         httpClient: this.httpClient,
         baseUrl: provider.endpointConfig.baseUrl ?? 'https://api.open-meteo.com/v1/forecast',
-        apiKey: apiKey ?? undefined,
         sourceId: provider.sourceRegistryId,
         attributionText: provider.attribution.text,
         attributionUrl: provider.attribution.url,
-        modelId: provider.modelAllowList[0],
         now: this.now,
+        ...(apiKey === null ? {} : { apiKey }),
+        ...(modelId === undefined ? {} : { modelId }),
       });
     }
 
