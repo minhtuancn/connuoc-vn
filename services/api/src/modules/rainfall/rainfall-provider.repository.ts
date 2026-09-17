@@ -1,9 +1,9 @@
 import type { Coordinate } from '@connuoc/shared-types';
 
-import {
+import type {
   WeatherProviderRepository,
-  type WeatherProviderRuntimeStore,
-  type WeatherRuntimeProvider,
+  WeatherProviderRuntimeStore,
+  WeatherRuntimeProvider,
 } from '../weather/weather-provider.repository.js';
 
 const RAINFALL_CAPABILITIES = new Set([
