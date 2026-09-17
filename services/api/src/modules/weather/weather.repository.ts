@@ -275,10 +275,8 @@ async function saveDailyPoints(
   }
 }
 
-function currentRecord(row: CurrentPointRow): CurrentWeatherRecord {
+function instantMetrics(row: CurrentPointRow) {
   return {
-    kind: 'MODEL_CURRENT',
-    validAt: compactInstant(row.valid_at),
     temperatureC: numberValue(row.temperature_c),
     apparentTemperatureC: nullableNumber(row.apparent_temperature_c),
     relativeHumidityPct: numberValue(row.relative_humidity_pct),
@@ -295,11 +293,19 @@ function currentRecord(row: CurrentPointRow): CurrentWeatherRecord {
   };
 }
 
+function currentRecord(row: CurrentPointRow): CurrentWeatherRecord {
+  return {
+    kind: 'MODEL_CURRENT',
+    validAt: compactInstant(row.valid_at),
+    ...instantMetrics(row),
+  };
+}
+
 function hourlyRecord(row: HourlyPointRow): HourlyWeatherPoint {
   return {
     kind: 'FORECAST',
-    ...currentRecord(row),
-    kind: 'FORECAST',
+    validAt: compactInstant(row.valid_at),
+    ...instantMetrics(row),
     precipitationProbabilityPct: nullableNumber(row.precipitation_probability_pct),
   };
 }
@@ -464,7 +470,7 @@ export class WeatherRepository {
     let bundle: PersistableWeatherBundle;
     if (run.capability === 'weather.current') {
       const point = await this.database().query<CurrentPointRow>(
-        `SELECT * FROM weather_current_points WHERE forecast_run_id = $1`,
+        'SELECT * FROM weather_current_points WHERE forecast_run_id = $1',
         [run.id],
       );
       const row = point.rows[0];
@@ -472,7 +478,7 @@ export class WeatherRepository {
       bundle = { capability: 'weather.current', grid, source, data: currentRecord(row) };
     } else if (run.capability === 'weather.hourlyForecast') {
       const points = await this.database().query<HourlyPointRow>(
-        `SELECT * FROM weather_hourly_points WHERE forecast_run_id = $1 ORDER BY valid_at ASC`,
+        'SELECT * FROM weather_hourly_points WHERE forecast_run_id = $1 ORDER BY valid_at ASC',
         [run.id],
       );
       if (points.rows.length === 0) throw databaseError('Cached hourly weather run has no points.');
@@ -484,7 +490,7 @@ export class WeatherRepository {
       };
     } else {
       const points = await this.database().query<DailyPointRow>(
-        `SELECT * FROM weather_daily_points WHERE forecast_run_id = $1 ORDER BY valid_date ASC`,
+        'SELECT * FROM weather_daily_points WHERE forecast_run_id = $1 ORDER BY valid_date ASC',
         [run.id],
       );
       if (points.rows.length === 0) throw databaseError('Cached daily weather run has no points.');
