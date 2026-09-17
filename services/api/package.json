@@ -5,7 +5,7 @@
   "type": "module",
   "main": "./dist/main.js",
   "scripts": {
-    "prepare:deps": "pnpm --filter @connuoc/shared-types build && pnpm --filter @connuoc/geo build && pnpm --filter @connuoc/tide-engine build && pnpm --filter @connuoc/lunar-calendar build",
+    "prepare:deps": "pnpm --filter @connuoc/shared-types build && pnpm --filter @connuoc/geo build && pnpm --filter @connuoc/tide-engine build && pnpm --filter @connuoc/lunar-calendar build && pnpm --filter @connuoc/weather-worker build",
     "prepare:phase2-exit": "pnpm --filter @connuoc/job-queue build && pnpm --filter @connuoc/tide-worker build && pnpm run prepare:deps",
     "prebuild": "pnpm run prepare:deps",
     "build": "tsc -p tsconfig.json",
@@ -26,6 +26,7 @@
     "@connuoc/lunar-calendar": "workspace:*",
     "@connuoc/shared-types": "workspace:*",
     "@connuoc/tide-engine": "workspace:*",
+    "@connuoc/weather-worker": "workspace:*",
     "@fastify/static": "10.1.3",
     "@nestjs/common": "12.0.1",
     "@nestjs/core": "12.0.1",
