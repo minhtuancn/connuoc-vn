@@ -134,7 +134,7 @@ export class WeatherOrchestrator {
         capability: request.capability,
         latitude: request.latitude,
         longitude: request.longitude,
-        hours: request.hours,
+        ...(request.hours === undefined ? {} : { hours: request.hours }),
       };
     }
     if (request.capability === 'weather.dailyForecast') {
@@ -142,7 +142,7 @@ export class WeatherOrchestrator {
         capability: request.capability,
         latitude: request.latitude,
         longitude: request.longitude,
-        days: request.days,
+        ...(request.days === undefined ? {} : { days: request.days }),
       };
     }
     return {
