@@ -1,13 +1,18 @@
 import {
   BadRequestException,
+  Catch,
   Controller,
   Get,
   Header,
   Inject,
   Query,
   ServiceUnavailableException,
+  UseFilters,
+  type ArgumentsHost,
+  type ExceptionFilter,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import type { FastifyReply } from 'fastify';
 import { z } from 'zod';
 
 import { WeatherService, WeatherUnavailableError } from './weather.service.js';
@@ -33,15 +38,30 @@ function validationDetail(error: z.ZodError): string {
     .join('; ');
 }
 
-function unavailable(): ServiceUnavailableException {
-  return new ServiceUnavailableException({
-    statusCode: 503,
-    code: 'WEATHER_UNAVAILABLE',
-    message: 'Weather data is temporarily unavailable.',
-  });
+class WeatherUnavailableHttpException extends ServiceUnavailableException {
+  constructor() {
+    super({
+      statusCode: 503,
+      code: 'WEATHER_UNAVAILABLE',
+      message: 'Weather data is temporarily unavailable.',
+    });
+  }
+}
+
+@Catch(WeatherUnavailableHttpException)
+class WeatherUnavailableExceptionFilter implements ExceptionFilter {
+  catch(exception: WeatherUnavailableHttpException, host: ArgumentsHost): void {
+    const reply = host.switchToHttp().getResponse<FastifyReply>();
+    reply.status(503).type('application/json').send(exception.getResponse());
+  }
+}
+
+function unavailable(): WeatherUnavailableHttpException {
+  return new WeatherUnavailableHttpException();
 }
 
 @ApiTags('weather')
+@UseFilters(WeatherUnavailableExceptionFilter)
 @Controller('weather')
 export class WeatherController {
   constructor(@Inject(WeatherService) private readonly service: WeatherService) {}
