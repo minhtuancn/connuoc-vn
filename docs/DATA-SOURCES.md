@@ -265,3 +265,39 @@ Machine-readable URLs được giữ trong `data/sources/registry.json`. Review 
 - NOAA CO-OPS metadata/disclaimer references cho Phase 1 tide validation.
 
 Source terms phải được re-review trước production onboarding vì external policies có thể thay đổi.
+
+
+## Phase 5C rainfall product semantics
+
+Rainfall records are source/product observations or estimates, not interchangeable measurements.
+
+- Gauge values remain `GAUGE_OBSERVATION`.
+- Radar products remain `RADAR_ESTIMATE`.
+- NASA GPM IMERG-normalized values remain `SATELLITE_ESTIMATE`.
+- Reanalysis remains `REANALYSIS`.
+- Model rainfall forecasts remain `DETERMINISTIC_FORECAST` or `ENSEMBLE_FORECAST`.
+- Any cross-source blend must be explicitly labelled `BLENDED_DERIVED` and carry a derivation version.
+
+Phase 5C preserves valid interval, native/declared resolution, source/product version, model run where applicable, fetch time and attribution. Estimated/model products must never be surfaced as gauge observations.
+
+### Accumulation and incomplete-window policy
+
+Public rainfall summary supports 1h, 3h, 6h, 12h, 24h, 72h and 7d windows. Derived windows retain input-record IDs, source IDs, product kinds and `rainfall-accum-v1`.
+
+A summary window is published only when temporal coverage is at least 50%. Partial windows remain explicitly `complete=false` with their coverage ratio. Missing contributing data propagates `amountMm=null`; the service does not silently fill gaps.
+
+### Rainfall last-known-good policy
+
+Live providers are attempted under the normal licence/commercial-use selector. On live failure, cached rainfall may be reused only for the same capability, within 25 km and within the configured stale grace. Phase 5C uses a 6-hour stale grace. Public forecast output marks this path `STALE`, `fallbackUsed=true` and `lastKnownGoodUsed=true`.
+
+### IMERG retention boundary
+
+IMERG normalization is not permission to mirror NASA gridded payloads into the transactional database. Large grids use object-storage references/checksums when retention is permitted. Production Earthdata retrieval must be a separately approved ingestion path; no fictitious unauthenticated public endpoint may be introduced.
+
+### Open-Meteo rainfall deployment modes
+
+Open-Meteo rainfall follows the Phase 5B deployment split. Free hosted access is not a commercial fallback. Paid-hosted credentials remain server-side. Self-hosting the server does not erase attribution or upstream model/data licence obligations.
+
+### Phase 5C explicit non-goals
+
+Rainfall APIs do not claim river stage, locally calibrated river rise, flood probability or official flood warning status. Those outputs require later calibrated/authoritative phases and their own evidence gates.
