@@ -41,6 +41,33 @@ export const CalibrationMetricsSchema = z
   });
 export type CalibrationMetrics = z.infer<typeof CalibrationMetricsSchema>;
 
+export const CalibrationMetricBreakdownSchema = z
+  .object({
+    datasetSplit: z.enum(['VALIDATION', 'TEST']),
+    leadSeconds: z.number().int().min(0).max(31_536_000).nullable(),
+    season: z.string().trim().min(1).max(120).nullable(),
+    eventSubset: z.string().trim().min(1).max(160).nullable(),
+    metrics: CalibrationMetricsSchema,
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (
+      value.leadSeconds === null &&
+      value.season === null &&
+      value.eventSubset === null
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['leadSeconds'],
+        message:
+          'metric breakdown must identify lead time, season or event subset',
+      });
+    }
+  });
+export type CalibrationMetricBreakdown = z.infer<
+  typeof CalibrationMetricBreakdownSchema
+>;
+
 export const CalibrationModelKindSchema = z.enum([
   'RATING_CURVE',
   'PERSISTENCE_BASELINE',
@@ -66,6 +93,7 @@ export const CalibrationRunSummarySchema = z
     version: NonEmptyIdSchema,
     stationId: NonEmptyIdSchema,
     riverReachId: NonEmptyIdSchema,
+    datumId: NonEmptyIdSchema,
     modelKind: CalibrationModelKindSchema,
     modelVersion: NonEmptyIdSchema,
     featureVersion: NonEmptyIdSchema,
@@ -79,6 +107,8 @@ export const CalibrationRunSummarySchema = z
     testPeriod: CalibrationPeriodSchema.nullable(),
     validationMetrics: CalibrationMetricsSchema.nullable(),
     testMetrics: CalibrationMetricsSchema.nullable(),
+    acceptedTestRmseM: z.number().finite().min(0).max(10000).nullable(),
+    metricBreakdowns: z.array(CalibrationMetricBreakdownSchema).max(2048),
     artifactChecksumSha256: z
       .string()
       .regex(/^[0-9a-f]{64}$/),
@@ -113,13 +143,37 @@ export const CalibrationRunSummarySchema = z
       if (
         value.testPeriod === null ||
         value.validationMetrics === null ||
-        value.testMetrics === null
+        value.testMetrics === null ||
+        value.acceptedTestRmseM === null
       ) {
         context.addIssue({
           code: 'custom',
           path: ['deploymentStatus'],
           message:
-            'active calibration requires validation and held-out test evidence',
+            'active calibration requires validation, held-out test evidence and an accepted RMSE bound',
+        });
+      } else if (
+        value.testMetrics.rmseM > value.acceptedTestRmseM
+      ) {
+        context.addIssue({
+          code: 'custom',
+          path: ['testMetrics', 'rmseM'],
+          message:
+            'held-out test RMSE exceeds the accepted deployment error bound',
+        });
+      }
+
+      const testLeadBreakdown = value.metricBreakdowns.find(
+        (breakdown) =>
+          breakdown.datasetSplit === 'TEST' &&
+          breakdown.leadSeconds !== null,
+      );
+      if (!testLeadBreakdown) {
+        context.addIssue({
+          code: 'custom',
+          path: ['metricBreakdowns'],
+          message:
+            'active stage calibration requires held-out lead-time MAE/RMSE breakdown',
         });
       }
     }
@@ -367,3 +421,162 @@ export const StageEvidenceStatusSchema = z.enum([
 export type StageEvidenceStatus = z.infer<
   typeof StageEvidenceStatusSchema
 >;
+
+
+export const StageForecastPointSchema = z.discriminatedUnion('status', [
+  z
+    .object({
+      status: z.literal('AVAILABLE'),
+      sourceDischargeRecordId: NonEmptyIdSchema,
+      validAt: IsoInstantSchema,
+      leadSeconds: z.number().int().min(0).max(31_536_000),
+      dischargeCms: DischargeCmsSchema,
+      stageM: StageMetresSchema,
+      unit: z.literal('m'),
+      datumId: NonEmptyIdSchema,
+      curveId: NonEmptyIdSchema,
+      curveVersion: NonEmptyIdSchema,
+      calibrationRunId: NonEmptyIdSchema,
+      testRmseM: z.number().finite().min(0).max(10000),
+      extrapolated: z.literal(false),
+    })
+    .strict(),
+  z
+    .object({
+      status: z.enum([
+        'OUTSIDE_CALIBRATED_DOMAIN',
+        'DATUM_MISMATCH',
+      ]),
+      sourceDischargeRecordId: NonEmptyIdSchema,
+      validAt: IsoInstantSchema,
+      leadSeconds: z.number().int().min(0).max(31_536_000),
+      dischargeCms: DischargeCmsSchema,
+      stageM: z.null(),
+      unit: z.literal('m'),
+      datumId: NonEmptyIdSchema,
+      curveId: NonEmptyIdSchema,
+      curveVersion: NonEmptyIdSchema,
+      calibrationRunId: NonEmptyIdSchema,
+      testRmseM: z.number().finite().min(0).max(10000),
+      extrapolated: z.literal(false),
+    })
+    .strict(),
+]);
+export type StageForecastPoint = z.infer<
+  typeof StageForecastPointSchema
+>;
+
+export const PersistenceBacktestCaseSchema = z
+  .object({
+    originAt: IsoInstantSchema,
+    validAt: IsoInstantSchema,
+    leadSeconds: z.number().int().min(0).max(31_536_000),
+    originStageM: StageMetresSchema,
+    observedStageM: StageMetresSchema,
+    datumId: NonEmptyIdSchema,
+  })
+  .strict()
+  .superRefine((value, context) => {
+    const expectedLead =
+      (Date.parse(value.validAt) - Date.parse(value.originAt)) /
+      1000;
+    if (
+      expectedLead < 0 ||
+      expectedLead !== value.leadSeconds
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['leadSeconds'],
+        message:
+          'leadSeconds must equal validAt minus originAt',
+      });
+    }
+  });
+export type PersistenceBacktestCase = z.infer<
+  typeof PersistenceBacktestCaseSchema
+>;
+
+export interface PersistenceBacktestResult {
+  readonly datumId: string;
+  readonly overall: CalibrationMetrics | null;
+  readonly byLead: readonly {
+    readonly leadSeconds: number;
+    readonly metrics: CalibrationMetrics;
+  }[];
+}
+
+export function calculateCalibrationMetrics(
+  errorsM: readonly number[],
+): CalibrationMetrics | null {
+  if (errorsM.length === 0) return null;
+  if (
+    errorsM.some(
+      (error) => !Number.isFinite(error),
+    )
+  ) {
+    throw new RangeError(
+      'calibration errors must be finite',
+    );
+  }
+
+  const absolute = errorsM.map((error) => Math.abs(error));
+  const maeM =
+    absolute.reduce((sum, value) => sum + value, 0) /
+    absolute.length;
+  const rmseM = Math.sqrt(
+    errorsM.reduce(
+      (sum, value) => sum + value * value,
+      0,
+    ) / errorsM.length,
+  );
+
+  return CalibrationMetricsSchema.parse({
+    maeM,
+    rmseM,
+    sampleCount: errorsM.length,
+  });
+}
+
+export function backtestPersistenceBaseline(
+  rawCases: readonly PersistenceBacktestCase[],
+  expectedDatumId: string,
+): PersistenceBacktestResult {
+  const datumId = NonEmptyIdSchema.parse(expectedDatumId);
+  const cases = rawCases.map((item) =>
+    PersistenceBacktestCaseSchema.parse(item),
+  );
+
+  if (
+    cases.some((item) => item.datumId !== datumId)
+  ) {
+    throw new RangeError(
+      'persistence baseline cannot mix incompatible stage datums',
+    );
+  }
+
+  const overallErrors = cases.map(
+    (item) => item.originStageM - item.observedStageM,
+  );
+  const byLeadMap = new Map<number, number[]>();
+  for (const item of cases) {
+    const errors = byLeadMap.get(item.leadSeconds) ?? [];
+    errors.push(item.originStageM - item.observedStageM);
+    byLeadMap.set(item.leadSeconds, errors);
+  }
+
+  return {
+    datumId,
+    overall: calculateCalibrationMetrics(overallErrors),
+    byLead: [...byLeadMap.entries()]
+      .sort(([left], [right]) => left - right)
+      .map(([leadSeconds, errors]) => {
+        const metrics = calculateCalibrationMetrics(errors);
+        if (metrics === null) {
+          throw new Error(
+            'non-empty lead bucket unexpectedly produced no metrics',
+          );
+        }
+        return { leadSeconds, metrics };
+      }),
+  };
+}
