@@ -26,6 +26,8 @@ function run(version: string): CalibrationRunSummary {
     version,
     stationId: 'station:phase5e:gauge',
     riverReachId: 'reach:phase5e:gauge',
+    datumId: 'VN-DATUM-PHASE5E',
+    sourceIds: ['phase5e-calibration-fixture'],
     modelKind: 'RATING_CURVE',
     modelVersion: `rating-curve-${version}`,
     featureVersion: 'stage-discharge-pairs-v1',
@@ -52,6 +54,20 @@ function run(version: string): CalibrationRunSummary {
       rmseM: version === 'v1' ? 0.28 : 0.19,
       sampleCount: 120,
     },
+    acceptedTestRmseM: 0.35,
+    metricBreakdowns: [
+      {
+        datasetSplit: 'TEST',
+        leadSeconds: 21_600,
+        season: null,
+        eventSubset: null,
+        metrics: {
+          maeM: version === 'v1' ? 0.21 : 0.15,
+          rmseM: version === 'v1' ? 0.29 : 0.2,
+          sampleCount: 60,
+        },
+      },
+    ],
     artifactChecksumSha256:
       version === 'v1'
         ? '1111111111111111111111111111111111111111111111111111111111111111'
