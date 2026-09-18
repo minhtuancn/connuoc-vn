@@ -22,8 +22,6 @@ let calibration2Id: string;
 
 beforeAll(async () => {
   client = await pool.connect();
-  await client.query('BEGIN');
-
   const source = await client.query<{ id: string }>(
     `INSERT INTO data_sources (source_key, name, source_type)
      VALUES ('river-rise-repo-fixture', 'River rise repository fixture', 'fixture')
@@ -160,10 +158,47 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  if (client) {
-    await client.query('ROLLBACK');
-    client.release();
-  }
+  await pool.query(
+    `DELETE FROM audit_log
+     WHERE target_type = 'rating_curve'
+       AND actor_id = 'ci-calibration-operator'`,
+  );
+  await pool.query(
+    `DELETE FROM river_stage_forecast_runs
+     WHERE station_id = $1`,
+    [stationId],
+  );
+  await pool.query(
+    `DELETE FROM rating_curves
+     WHERE station_id = $1`,
+    [stationId],
+  );
+  await pool.query(
+    `DELETE FROM calibration_runs
+     WHERE station_id = $1`,
+    [stationId],
+  );
+  await pool.query(
+    `DELETE FROM stations
+     WHERE public_id = 'station:river-rise:repo'`,
+  );
+  await pool.query(
+    `DELETE FROM river_reaches
+     WHERE public_id = 'reach:river-rise:repo'`,
+  );
+  await pool.query(
+    `DELETE FROM rivers
+     WHERE public_id = 'river:river-rise:repo'`,
+  );
+  await pool.query(
+    `DELETE FROM basins
+     WHERE public_id = 'basin:river-rise:repo'`,
+  );
+  await pool.query(
+    `DELETE FROM data_sources
+     WHERE source_key = 'river-rise-repo-fixture'`,
+  );
+  client?.release();
   await pool.end();
 });
 
