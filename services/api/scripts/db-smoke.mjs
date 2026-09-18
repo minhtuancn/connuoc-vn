@@ -86,6 +86,7 @@ try {
     'rating_curve_points',
     'stage_forecast_runs',
     'stage_forecast_points',
+    'flood_susceptibility_baselines',
     'flood_probability_calibrations',
     'flood_risk_assessments',
     'flood_risk_backtest_runs',
@@ -271,6 +272,14 @@ try {
     floodRiskColumnMap.set(row.table_name, values);
   }
   for (const [table, required] of Object.entries({
+    flood_susceptibility_baselines: [
+      'source_id',
+      'version',
+      'level',
+      'resolution_m',
+      'geometry',
+      'limitation',
+    ],
     flood_probability_calibrations: [
       'event_definition',
       'validation_start',
