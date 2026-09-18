@@ -38,12 +38,13 @@ try {
     '0006_rainfall.sql',
     '0007_hydrology_discharge.sql',
     '0008_stage_calibration.sql',
+    '0009_flood_risk.sql',
   ];
   const appliedMigrations = await client.query(
     'SELECT migration_name FROM schema_migrations ORDER BY migration_name ASC',
   );
   if (JSON.stringify(appliedMigrations.rows.map((row) => row.migration_name)) !== JSON.stringify(expectedMigrations)) {
-    throw new Error('Expected migrations 0001 through 0008 to be applied in deterministic order.');
+    throw new Error('Expected migrations 0001 through 0009 to be applied in deterministic order.');
   }
 
   const expectedTables = [
@@ -85,6 +86,9 @@ try {
     'rating_curve_points',
     'stage_forecast_runs',
     'stage_forecast_points',
+    'flood_probability_calibrations',
+    'flood_risk_assessments',
+    'flood_risk_backtest_runs',
   ];
   const tables = await client.query(
     `SELECT table_name FROM information_schema.tables
@@ -244,6 +248,62 @@ try {
     for (const column of required) {
       if (!actual.has(column)) {
         throw new Error(`Stage calibration schema is missing ${table}.${column}.`);
+      }
+    }
+  }
+
+
+  const floodRiskColumns = await client.query(
+    `SELECT table_name, column_name
+     FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = ANY($1::text[])`,
+    [[
+      'flood_probability_calibrations',
+      'flood_risk_assessments',
+      'flood_risk_backtest_runs',
+    ]],
+  );
+  const floodRiskColumnMap = new Map();
+  for (const row of floodRiskColumns.rows) {
+    const values = floodRiskColumnMap.get(row.table_name) ?? new Set();
+    values.add(row.column_name);
+    floodRiskColumnMap.set(row.table_name, values);
+  }
+  for (const [table, required] of Object.entries({
+    flood_probability_calibrations: [
+      'event_definition',
+      'validation_start',
+      'validation_end',
+      'sample_count',
+      'brier_score',
+      'artifact_checksum_sha256',
+      'status',
+    ],
+    flood_risk_assessments: [
+      'scope_kind',
+      'scope_public_id',
+      'risk_level',
+      'confidence',
+      'model_version',
+      'probability_min',
+      'probability_max',
+      'probability_calibration_id',
+      'input_checksum_sha256',
+    ],
+    flood_risk_backtest_runs: [
+      'event_definition',
+      'evaluation_start',
+      'evaluation_end',
+      'metrics',
+      'artifact_checksum_sha256',
+      'status',
+    ],
+  })) {
+    const actual = floodRiskColumnMap.get(table) ?? new Set();
+    for (const column of required) {
+      if (!actual.has(column)) {
+        throw new Error(`Flood-risk schema is missing ${table}.${column}.`);
       }
     }
   }
@@ -475,7 +535,7 @@ try {
     postgisVersion: postgis.rows[0].version,
     checkedTables: expectedTables.length,
     checks: [
-      'migration-order-0001-through-0008',
+      'migration-order-0001-through-0009',
       'spatial-query',
       'administrative-area-constraints',
       'provider-policy-schema',
@@ -489,6 +549,8 @@ try {
       'hydrology-request-coordinate-non-persistence',
       'stage-calibration-schema',
       'stage-datum-and-evidence-columns',
+      'flood-risk-schema',
+      'flood-probability-calibration-gate',
       'harmonic-tide-model-schema',
       'admin-token-hash-schema',
       'raw-payload-idempotency-constraint',
