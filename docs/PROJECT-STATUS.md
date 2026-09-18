@@ -1,6 +1,6 @@
 # Project Status — Con Nước Việt
 
-Snapshot: **2026-09-17**
+Snapshot: **2026-09-18**
 
 This document is the short operational status view for the repository. `docs/ROADMAP.md` remains the long-term product roadmap; GitHub issues/PRs remain the execution source of truth.
 
@@ -8,13 +8,13 @@ This document is the short operational status view for the repository. `docs/ROA
 
 The project is **not yet near full production completion**.
 
-The deterministic core, backend/data platform, provider/location foundation and normalized weather forecast slice are already substantial. However, the end-to-end product still has major work remaining in mobile UX/offline completion, rainfall, river discharge, calibrated river-rise, flood risk, official alerts, pilot backtesting, production hardening and store delivery.
+The deterministic core, backend/data platform, provider/location foundation, normalized weather forecasts and normalized rainfall intelligence are already substantial. However, the end-to-end product still has major work remaining in mobile UX/offline completion, river discharge, calibrated river-rise, flood risk, official alerts, pilot backtesting, production hardening and store delivery.
 
 A better description of the current state is:
 
 - **Core/backend platform:** production-shaped and continuously verified.
 - **Mobile MVP:** partially implemented; foundation/API client are merged, offline persistence is still in draft PR #50 and main user journeys remain open.
-- **Weather/Hydrology Phase 5:** Phase 5A and Phase 5B are complete; Phase 5C–5J remain open.
+- **Weather/Hydrology Phase 5:** Phase 5A, Phase 5B and Phase 5C are complete and regression-gated; Phase 5D–5J remain open.
 - **Full public production product:** not complete.
 
 ## Current milestone dashboard
@@ -28,10 +28,10 @@ A better description of the current state is:
 | Phase 4 Public Web & Admin | PARTIAL | Backend admin foundation exists; complete public web/admin product journeys are not finished. |
 | Phase 5A Location + Provider Platform | DONE | #53 closed; implementation merged via PR #51/#63 with dedicated Phase 5A gate. |
 | Phase 5B Weather Forecasts | DONE | #54 closed via PR #102. Normalized contracts, Open-Meteo adapter boundary, provider fallback, cache/history, FRESH/STALE/UNAVAILABLE behavior and `/v1/weather/*` APIs are merged with a dedicated Phase 5B gate. |
-| Phase 5C Rainfall | NOT STARTED | #55 open. |
+| Phase 5C Rainfall | DONE / REGRESSION-GATED | #55 implemented in PR #109. Normalized rainfall taxonomy, accumulations, PostGIS persistence, provider fallback/LKG and `/v1/rainfall/*` APIs pass the dedicated Phase 5C gate. |
 | Phase 5D River discharge | NOT STARTED | #56 open. |
-| Phase 5E Calibrated river-rise | BLOCKED BY 5C/5D | #57 open. Exact stage requires provider-native stage or validated local calibration. Weather dependency #54 is complete. |
-| Phase 5F Flood risk | BLOCKED BY RAIN/DISCHARGE/CALIBRATION | #58 open. Numerical probability requires calibration evidence. |
+| Phase 5E Calibrated river-rise | BLOCKED BY 5D | #57 open. Weather (#54) and rainfall (#55) foundations are complete; exact stage still requires discharge plus provider-native stage or validated local calibration. |
+| Phase 5F Flood risk | BLOCKED BY DISCHARGE/CALIBRATION | #58 open. Rainfall foundation #55 is complete; numerical probability still requires discharge/calibration evidence. |
 | Phase 5G Official Vietnam alerts | NOT STARTED | #59 open; machine-use/redistribution rights remain approval-gated per source policy. |
 | Phase 5H Provider operations | PARTIAL FOUNDATION | #60 open; provider configuration/RBAC/health/licence foundation exists from 5A, full quota/usage operations remain. |
 | Phase 5I Mobile/Web weather-hydrology UX | NOT STARTED | #61 open and also depends on presentation foundations. |
@@ -48,10 +48,10 @@ A better description of the current state is:
 
 Phase 5 contains ten workstreams (#53–#62):
 
-- **2 completed:** #53 Phase 5A and #54 Phase 5B.
-- **8 remaining:** #55–#62.
+- **3 completed:** #53 Phase 5A, #54 Phase 5B and #55 Phase 5C.
+- **7 remaining:** #56–#62.
 
-Therefore Phase 5 has a solid platform/weather foundation, but is **not close to its exit gate yet**. The most scientifically difficult work — rainfall, river discharge, local stage calibration, flood-risk validation and pilot backtesting — is still ahead.
+Therefore Phase 5 now has solid platform, weather and rainfall foundations, but is **not close to its exit gate yet**. The most scientifically difficult remaining work — river discharge, local stage calibration, flood-risk validation and pilot backtesting — is still ahead.
 
 ## Mobile MVP progress at a glance
 
@@ -84,14 +84,35 @@ Merged in PR #102:
 - source/licence documentation that separates free hosted, paid hosted and self-hosted Open-Meteo usage;
 - dedicated Phase 5B workflow with focused end-to-end weather regression coverage.
 
-This does **not** yet mean rainfall intelligence, river level prediction or flood-risk prediction is complete.
+This does **not** yet mean river level prediction or flood-risk prediction is complete.
+
+
+## What Phase 5C now provides
+
+Implemented in PR #109 and verified by the dedicated Phase 5C workflow:
+
+- first-class rainfall product kinds for gauge, radar, satellite, reanalysis, deterministic/ensemble forecast and blended/derived values;
+- normalized valid interval, accumulation period, spatial footprint/resolution, quality and source lineage;
+- PostGIS persistence for rainfall runs, records and derived accumulations with idempotent re-ingestion;
+- deterministic 1h/3h/6h/12h/24h/72h/7d accumulation contracts with coverage/completeness and derivation lineage;
+- explicit partial-window policy: public summary exposes only windows with at least 50% temporal coverage;
+- fixture/Open-Meteo rainfall adapters plus an IMERG normalization/object-reference boundary;
+- provider licence/commercial-use filtering and deterministic fallback;
+- nearest compatible LKG fallback bounded to 25 km and a 6-hour stale grace;
+- public endpoints:
+  - `GET /v1/rainfall/summary`
+  - `GET /v1/rainfall/history`
+  - `GET /v1/rainfall/forecast`
+- secret/provider-runtime redaction from public responses;
+- a hard non-goal boundary: no river-stage or flood-probability claims are produced by Phase 5C.
+
 
 ## Critical path to a practical MVP
 
 The shortest path to a product that can be seriously field-tested is:
 
 1. Resume and finish Phase 3 #42–#47 so Android/iOS has complete offline-capable user journeys.
-2. Implement #55 rainfall and #56 river discharge in parallel where dependencies permit.
+2. Implement #56 river discharge on top of the completed weather/rainfall foundations.
 3. Implement #57 calibrated river-rise only where gauge/datum/rating-curve evidence exists.
 4. Implement #58 flood-risk with calibration gates and #59 official warnings as a separate authoritative channel.
 5. Implement #61 mobile/web weather-river-flood UX.
@@ -120,7 +141,8 @@ The project has **not reached this definition yet**.
 - Weather & Hydrology Epic: #52
 - Phase 5A: #53 — completed
 - Phase 5B: #54 / PR #102 — completed
-- Phase 5C–5J: #55–#62 — remaining
+- Phase 5C: #55 / PR #109 — completed and regression-gated
+- Phase 5D–5J: #56–#62 — remaining
 
 ## Update policy
 
