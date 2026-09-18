@@ -283,6 +283,7 @@ describe('CalibrationRepository activation and rollback', () => {
       ...run('v3'),
       id: 'calibration:phase5e:v3',
       version: 'v3',
+      datumId: 'WRONG-DATUM',
       artifactChecksumSha256:
         '3333333333333333333333333333333333333333333333333333333333333333',
     };
