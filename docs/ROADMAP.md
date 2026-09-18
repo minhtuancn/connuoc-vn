@@ -176,7 +176,7 @@ Từ 01/07/2025, mô hình chính quyền địa phương hiện hành của Vi�
 - [x] #53 Phase 5A — Vietnam location taxonomy + provider platform foundation — **completed and merged**.
 - [x] #54 Phase 5B — Multi-provider weather forecasts + normalized public APIs — **completed and merged via PR #102**.
 - [x] #55 Phase 5C — Rainfall observations/history/forecast + accumulation features — **completed and regression-gated in PR #109**.
-- [ ] #56 Phase 5D — River network enrichment + GEOGLOWS/GloFAS discharge forecasts.
+- [x] #56 Phase 5D — River network enrichment + GEOGLOWS/GloFAS discharge forecasts — **completed and regression-gated in PR #110**.
 - [ ] #57 Phase 5E — Gauge calibration, rating curves + river-rise forecasts.
 - [ ] #58 Phase 5F — Flood-risk engine + hazard/susceptibility baselines.
 - [ ] #59 Phase 5G — Vietnamese official alerts + partner-feed framework.
@@ -184,7 +184,7 @@ Từ 01/07/2025, mô hình chính quyền địa phương hiện hành của Vi�
 - [ ] #61 Phase 5I — Mobile/web weather, river + flood-risk journeys with location UX.
 - [ ] #62 Phase 5J — Pilot calibration, backtesting + Phase 5 exit gate.
 
-Phase 5 snapshot 2026-09-18: **3 workstreams completed, 7 remaining**. The subsystem now has location/provider, normalized weather and normalized rainfall foundations, but is not yet close to the Phase 5 exit gate because river discharge, river calibration, flood risk and pilot validation remain.
+Phase 5 snapshot 2026-09-18: **4 workstreams completed, 6 remaining**. The subsystem now has location/provider, normalized weather, normalized rainfall and normalized river-discharge foundations, but is not yet close to the Phase 5 exit gate because local stage calibration, flood risk and pilot validation remain.
 
 Dependency graph:
 
@@ -222,8 +222,8 @@ Dependency graph:
 1. Phase 5A provider/location foundation and source/licence review.
 2. Phase 5B normalized weather provider/API foundation.
 3. Phase 5C normalized rainfall observations/history/forecast, accumulation and bounded LKG foundation.
-4. Add river discharge and build an evidence-rich pilot with weather/rain/discharge data.
-5. Calibrate/backtest station/river-rise/flood-risk only where local observations support it.
+4. Phase 5D normalized river-reach/discharge provider, persistence and public-API foundation.
+5. Build an evidence-rich pilot with weather/rain/discharge data and calibrate/backtest station/river-rise/flood-risk only where local observations support it.
 6. Northern delta/estuaries.
 7. Central coast.
 8. Southern delta/coast.
