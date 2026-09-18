@@ -620,6 +620,51 @@ export class HydrologyRepository {
     };
   }
 
+  async findForecastRunIdForRecord(query: {
+    readonly riverReachPublicId: string;
+    readonly externalRecordId: string;
+    readonly sourceId: string;
+    readonly productId: string;
+    readonly productVersion: string | null;
+    readonly fetchedAt: string;
+  }): Promise<string | null> {
+    if (
+      query.riverReachPublicId.trim().length === 0 ||
+      query.externalRecordId.trim().length === 0 ||
+      query.sourceId.trim().length === 0 ||
+      query.productId.trim().length === 0 ||
+      !Number.isFinite(Date.parse(query.fetchedAt))
+    ) {
+      throw new RangeError('hydrology forecast run lookup is invalid');
+    }
+
+    const result = await this.database().query<{ id: string }>(
+      `SELECT h.id::text AS id
+       FROM hydrology_forecast_runs h
+       JOIN river_reaches rr ON rr.id = h.river_reach_id
+       JOIN hydrology_discharge_points p
+         ON p.hydrology_run_id = h.id
+       WHERE rr.public_id = $1
+         AND h.capability = 'hydrology.dischargeForecast'
+         AND p.external_record_id = $2
+         AND h.source_registry_id = $3
+         AND h.product_id = $4
+         AND h.product_version IS NOT DISTINCT FROM $5
+         AND h.fetched_at = $6::timestamptz
+       ORDER BY h.created_at DESC, h.id ASC
+       LIMIT 1`,
+      [
+        query.riverReachPublicId,
+        query.externalRecordId,
+        query.sourceId,
+        query.productId,
+        query.productVersion,
+        query.fetchedAt,
+      ],
+    );
+    return result.rows[0]?.id ?? null;
+  }
+
   private async reachId(
     client: PoolClient,
     riverReachPublicId: string,
