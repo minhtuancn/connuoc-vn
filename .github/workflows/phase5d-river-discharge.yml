@@ -27,7 +27,7 @@ jobs:
         image: postgis/postgis:18-3.6
         env:
           POSTGRES_USER: connuoc
-          POSTGRES_PASSWORD: connuoc
+          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: connuoc
         ports:
           - 5432:5432
@@ -37,7 +37,7 @@ jobs:
           --health-timeout 3s
           --health-retries 20
     env:
-      DATABASE_URL: postgresql://connuoc:connuoc@localhost:5432/connuoc
+      DATABASE_URL: postgresql://connuoc@localhost:5432/connuoc
       NODE_ENV: test
     steps:
       - uses: actions/checkout@v5
