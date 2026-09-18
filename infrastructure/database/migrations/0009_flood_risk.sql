@@ -2,6 +2,45 @@
 -- and backtesting evidence. Exact end-user point coordinates are intentionally
 -- not persisted by this migration.
 
+
+CREATE TABLE flood_susceptibility_baselines (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  public_id text NOT NULL UNIQUE,
+  source_id text NOT NULL,
+  version text NOT NULL,
+  level text NOT NULL,
+  resolution_m numeric(18, 3) NOT NULL,
+  geometry geometry(MultiPolygon, 4326) NOT NULL,
+  limitation text NOT NULL,
+  effective_from timestamptz NOT NULL DEFAULT now(),
+  effective_to timestamptz,
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT flood_susceptibility_public_nonempty
+    CHECK (length(btrim(public_id)) > 0),
+  CONSTRAINT flood_susceptibility_source_nonempty
+    CHECK (length(btrim(source_id)) > 0),
+  CONSTRAINT flood_susceptibility_version_nonempty
+    CHECK (length(btrim(version)) > 0),
+  CONSTRAINT flood_susceptibility_level
+    CHECK (level IN ('LOW', 'MODERATE', 'HIGH', 'VERY_HIGH')),
+  CONSTRAINT flood_susceptibility_resolution
+    CHECK (resolution_m > 0),
+  CONSTRAINT flood_susceptibility_limitation_nonempty
+    CHECK (length(btrim(limitation)) > 0),
+  CONSTRAINT flood_susceptibility_effective_range
+    CHECK (effective_to IS NULL OR effective_to >= effective_from),
+  CONSTRAINT flood_susceptibility_metadata_object
+    CHECK (jsonb_typeof(metadata) = 'object')
+);
+
+CREATE INDEX flood_susceptibility_geometry_gix
+  ON flood_susceptibility_baselines
+  USING gist (geometry);
+CREATE INDEX flood_susceptibility_effective_idx
+  ON flood_susceptibility_baselines
+  (effective_from, effective_to);
+
 CREATE TABLE flood_probability_calibrations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   public_id text NOT NULL UNIQUE,
