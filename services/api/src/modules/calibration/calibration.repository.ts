@@ -23,6 +23,12 @@ export interface ActiveRatingCurveEvidence {
   readonly calibration: CalibrationRunSummary;
 }
 
+export interface ObservedStage {
+  readonly stageM: number;
+  readonly observedAt: string;
+  readonly datumId: string;
+}
+
 interface IdentityRow {
   id: string;
 }
@@ -567,12 +573,104 @@ export class CalibrationRepository {
 
     if (result.rows.length === 0) return null;
     if (result.rows.length > 1) {
-      throw new Error(
-        'Multiple active stage calibrations exist for this river reach; station selection is required.',
-      );
+      // Multiple current calibrated gauges for one reach require an explicit
+      // station-selection rule. Phase 5E fails closed instead of guessing.
+      return null;
     }
 
     return this.materializeActive(result.rows[0]!);
+  }
+
+  async findActiveCurveForStation(
+    stationPublicId: string,
+    atUtc: string,
+  ): Promise<ActiveRatingCurveEvidence | null> {
+    if (stationPublicId.trim().length === 0) {
+      throw new RangeError('stationPublicId must not be empty');
+    }
+    assertInstant(atUtc, 'atUtc');
+
+    const result = await this.database().query<DeploymentRow>(
+      this.deploymentQuery(
+        `s.public_id = $1
+         AND rc.status = 'ACTIVE'
+         AND cr.deployment_status = 'ACTIVE'
+         AND grl.link_state = 'MAPPED'
+         AND rc.effective_from <= $2::timestamptz
+         AND (rc.effective_to IS NULL OR rc.effective_to >= $2::timestamptz)
+         AND grl.effective_from <= $2::timestamptz
+         AND (grl.effective_to IS NULL OR grl.effective_to >= $2::timestamptz)`,
+        `ORDER BY grl.confidence DESC, rc.effective_from DESC, rc.public_id ASC
+         LIMIT 2`,
+      ),
+      [stationPublicId, atUtc],
+    );
+
+    if (result.rows.length !== 1) return null;
+    return this.materializeActive(result.rows[0]!);
+  }
+
+  async findLatestObservedStage(query: {
+    readonly stationPublicId: string;
+    readonly datumId: string;
+    readonly atUtc: string;
+  }): Promise<ObservedStage | null> {
+    if (
+      query.stationPublicId.trim().length === 0 ||
+      query.datumId.trim().length === 0
+    ) {
+      throw new RangeError(
+        'stationPublicId and datumId must not be empty',
+      );
+    }
+    assertInstant(query.atUtc, 'atUtc');
+
+    const result = await this.database().query<{
+      value: number | string;
+      unit: 'm' | 'cm' | 'mm';
+      observed_at: Date | string;
+      datum_id: string;
+    }>(
+      `SELECT
+         o.value,
+         o.unit,
+         o.observed_at,
+         o.datum_id
+       FROM observations o
+       JOIN stations s ON s.id = o.station_id
+       WHERE s.public_id = $1
+         AND o.datum_id = $2
+         AND o.observed_at <= $3::timestamptz
+         AND o.quality_state = 'GOOD'
+       ORDER BY o.observed_at DESC, o.id DESC
+       LIMIT 1`,
+      [
+        query.stationPublicId,
+        query.datumId,
+        query.atUtc,
+      ],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+
+    const raw = asNumber(row.value);
+    const stageM =
+      row.unit === 'm'
+        ? raw
+        : row.unit === 'cm'
+          ? raw / 100
+          : raw / 1000;
+    if (!Number.isFinite(stageM)) {
+      throw new TypeError(
+        'observed gauge stage could not be normalized to metres',
+      );
+    }
+
+    return {
+      stageM,
+      observedAt: asIso(row.observed_at),
+      datumId: row.datum_id,
+    };
   }
 
   async findCalibrationMetrics(
