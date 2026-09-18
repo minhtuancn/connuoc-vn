@@ -220,8 +220,8 @@ CREATE TABLE hydrology_return_periods (
   return_period_years integer NOT NULL,
   discharge_cms numeric(20, 6) NOT NULL,
   unit text NOT NULL DEFAULT 'm3/s',
-  retrospective_period_start timestamptz NOT NULL,
-  retrospective_period_end timestamptz NOT NULL,
+  retrospective_period_start timestamptz,
+  retrospective_period_end timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (hydrology_run_id, return_period_years),
   CONSTRAINT hydrology_return_periods_years
@@ -231,5 +231,9 @@ CREATE TABLE hydrology_return_periods (
   CONSTRAINT hydrology_return_periods_unit
     CHECK (unit = 'm3/s'),
   CONSTRAINT hydrology_return_periods_retrospective_range
-    CHECK (retrospective_period_end > retrospective_period_start)
+    CHECK (
+      retrospective_period_start IS NULL
+      OR retrospective_period_end IS NULL
+      OR retrospective_period_end > retrospective_period_start
+    )
 );
