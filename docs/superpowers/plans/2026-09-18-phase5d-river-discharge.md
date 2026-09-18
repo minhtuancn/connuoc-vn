@@ -62,14 +62,16 @@ Exit:
 
 Add migration `0007_hydrology_discharge.sql`.
 
-Minimum tables:
-- `river_basins`;
+Reuse the existing Phase 2 `basins`, `rivers` and `stations` tables rather than duplicating those concepts.
+
+Minimum new tables:
 - `river_reaches`;
 - `river_reach_provider_mappings`;
 - `hydrology_forecast_runs`;
 - `hydrology_discharge_points`;
-- `hydrology_return_periods`;
-- `hydrology_retrospective_points`.
+- `hydrology_return_periods`.
+
+Forecast and retrospective discharge records share `hydrology_discharge_points`; their `product_kind` and run capability keep the semantics distinct.
 
 Storage rules:
 - stable public IDs for basin/reach;
