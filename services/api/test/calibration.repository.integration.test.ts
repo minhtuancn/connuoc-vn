@@ -184,7 +184,6 @@ afterAll(async () => {
 describe('CalibrationRepository activation and rollback', () => {
   it('saves validated evidence and activates a compatible rating curve transactionally', async () => {
     await repository.saveCalibrationRun(run('v1'), {
-      sourceSummary: [{ sourceId: 'phase5e-calibration-fixture' }],
       validatedAtUtc: '2026-09-01T00:00:00Z',
     });
     await repository.saveRatingCurve(curve('v1'));
@@ -221,7 +220,6 @@ describe('CalibrationRepository activation and rollback', () => {
 
   it('supersedes the old version on upgrade and supports rollback to prior validated evidence', async () => {
     await repository.saveCalibrationRun(run('v2'), {
-      sourceSummary: [{ sourceId: 'phase5e-calibration-fixture' }],
       validatedAtUtc: '2026-09-10T00:00:00Z',
     });
     await repository.saveRatingCurve(curve('v2'));
@@ -289,7 +287,6 @@ describe('CalibrationRepository activation and rollback', () => {
         '3333333333333333333333333333333333333333333333333333333333333333',
     };
     await repository.saveCalibrationRun(badRun, {
-      sourceSummary: [{ sourceId: 'phase5e-calibration-fixture' }],
       validatedAtUtc: '2026-09-15T00:00:00Z',
     });
     await repository.saveRatingCurve(curve('v3', 'WRONG-DATUM'));
