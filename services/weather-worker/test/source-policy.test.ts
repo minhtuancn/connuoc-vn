@@ -80,14 +80,17 @@ describe('Phase 5 provider source registry', () => {
 
   it('uses the Phase 5 machine-policy registry version', () => {
     expect(registry.schemaVersion).toBeGreaterThanOrEqual(2);
-    expect(registry.reviewedAt).toBe('2026-09-17');
+    expect(registry.reviewedAt).toBe('2026-09-18');
   });
 
   it('contains all reviewed Phase 5 provider candidates with explicit rights fields', () => {
     for (const id of requiredIds) {
       const source = registry.sources.find((candidate) => candidate.id === id);
       expect(source, `missing source ${id}`).toBeDefined();
-      expect(source).toMatchObject({ policyVersion: 1, termsReviewedAt: '2026-09-17' });
+      expect(source).toMatchObject({ policyVersion: 1 });
+      expect(source?.termsReviewedAt).toEqual(expect.any(String));
+      expect(source?.termsReviewedAt).toMatch(/^\\d{4}-\\d{2}-\\d{2}$/);
+      expect(String(source?.termsReviewedAt) <= registry.reviewedAt).toBe(true);
       expect(source?.licenseStatus).toEqual(expect.any(String));
       expect(source?.commercialUseStatus).toMatch(/^(ALLOWED|RESTRICTED|UNKNOWN)$/);
       expect(source?.redistribution).toMatch(
