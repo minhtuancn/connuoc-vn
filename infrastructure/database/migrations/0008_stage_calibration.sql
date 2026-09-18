@@ -273,6 +273,7 @@ CREATE TABLE stage_forecast_points (
   stage_forecast_run_id uuid NOT NULL REFERENCES stage_forecast_runs(id) ON DELETE CASCADE,
   external_discharge_record_id text NOT NULL,
   valid_at timestamptz NOT NULL,
+  lead_seconds integer NOT NULL,
   discharge_cms numeric(20, 6) NOT NULL,
   derivation_status text NOT NULL,
   stage_m numeric(18, 6),
@@ -282,6 +283,7 @@ CREATE TABLE stage_forecast_points (
   PRIMARY KEY (stage_forecast_run_id, external_discharge_record_id),
   CONSTRAINT stage_forecast_points_external_id_nonempty
     CHECK (length(btrim(external_discharge_record_id)) > 0),
+  CONSTRAINT stage_forecast_points_lead CHECK (lead_seconds >= 0),
   CONSTRAINT stage_forecast_points_discharge CHECK (discharge_cms >= 0),
   CONSTRAINT stage_forecast_points_status
     CHECK (derivation_status IN ('AVAILABLE', 'OUTSIDE_CALIBRATED_DOMAIN', 'DATUM_MISMATCH')),
