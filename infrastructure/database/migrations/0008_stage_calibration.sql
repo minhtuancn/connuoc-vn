@@ -284,7 +284,6 @@ CREATE TABLE stage_forecast_points (
   CONSTRAINT stage_forecast_points_external_id_nonempty
     CHECK (length(btrim(external_discharge_record_id)) > 0),
   CONSTRAINT stage_forecast_points_lead CHECK (lead_seconds >= 0),
-  CONSTRAINT stage_forecast_points_lead CHECK (lead_seconds >= 0),
   CONSTRAINT stage_forecast_points_discharge CHECK (discharge_cms >= 0),
   CONSTRAINT stage_forecast_points_status
     CHECK (derivation_status IN ('AVAILABLE', 'OUTSIDE_CALIBRATED_DOMAIN', 'DATUM_MISMATCH')),
