@@ -1,6 +1,7 @@
 import { Module, type DynamicModule } from '@nestjs/common';
 
 import { HealthController } from './modules/health/health.controller.js';
+import { HydrologyModule } from './modules/hydrology/hydrology.module.js';
 import { AdminModule } from './modules/admin/admin.module.js';
 import { PublicDataModule } from './modules/public-data/public-data.module.js';
 import { RainfallModule } from './modules/rainfall/rainfall.module.js';
@@ -20,6 +21,7 @@ export class AppModule {
         AdminModule.register(options),
         WeatherModule.register(options),
         RainfallModule.register(options),
+        HydrologyModule.register(options),
       ],
       controllers: [HealthController],
     };
