@@ -116,7 +116,8 @@ CREATE TABLE calibration_runs (
   CONSTRAINT calibration_runs_retired_timestamp
     CHECK (
       retired_at IS NULL
-      OR retired_at >= created_at
+      OR activated_at IS NULL
+      OR retired_at >= activated_at
     )
 );
 
@@ -211,7 +212,11 @@ CREATE TABLE rating_curves (
       OR status <> 'ACTIVE'
     ),
   CONSTRAINT rating_curves_retired_timestamp
-    CHECK (retired_at IS NULL OR retired_at >= created_at),
+    CHECK (
+      retired_at IS NULL
+      OR activated_at IS NULL
+      OR retired_at >= activated_at
+    ),
   CONSTRAINT rating_curves_not_self_supersede
     CHECK (
       supersedes_rating_curve_id IS NULL
