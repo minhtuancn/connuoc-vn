@@ -7,6 +7,10 @@ import {
 } from '../../database/database.module.js';
 import { WeatherProviderRepository } from '../weather/weather-provider.repository.js';
 import { EnvironmentWeatherSecretResolver } from '../weather/weather-secret.resolver.js';
+import { CalibrationRepository } from '../calibration/calibration.repository.js';
+import { StageForecastController, StationCalibrationController } from '../calibration/calibration.controller.js';
+import { StageForecastRepository } from '../calibration/stage-forecast.repository.js';
+import { StageForecastService } from '../calibration/stage-forecast.service.js';
 import { HydrologyAdapterFactory } from './hydrology-adapter.factory.js';
 import { HydrologyController } from './hydrology.controller.js';
 import { HydrologyOrchestrator } from './hydrology-orchestrator.js';
@@ -27,7 +31,7 @@ export class HydrologyModule {
     return {
       module: HydrologyModule,
       imports: [DatabaseModule.register(options)],
-      controllers: [HydrologyController],
+      controllers: [HydrologyController, StageForecastController, StationCalibrationController],
       providers: [
         {
           provide: RiverReachRepository,
@@ -39,6 +43,18 @@ export class HydrologyModule {
           provide: HydrologyRepository,
           useFactory: (pool: Pool | null) =>
             new HydrologyRepository(pool),
+          inject: [PG_POOL],
+        },
+        {
+          provide: CalibrationRepository,
+          useFactory: (pool: Pool | null) =>
+            new CalibrationRepository(pool),
+          inject: [PG_POOL],
+        },
+        {
+          provide: StageForecastRepository,
+          useFactory: (pool: Pool | null) =>
+            new StageForecastRepository(pool),
           inject: [PG_POOL],
         },
         {
@@ -98,8 +114,29 @@ export class HydrologyModule {
             RiverReachRepository,
           ],
         },
+        {
+          provide: StageForecastService,
+          useFactory: (
+            hydrologyService: HydrologyService,
+            hydrologyRepository: HydrologyRepository,
+            calibrationRepository: CalibrationRepository,
+            stageRepository: StageForecastRepository,
+          ) =>
+            new StageForecastService(
+              hydrologyService,
+              hydrologyRepository,
+              calibrationRepository,
+              stageRepository,
+            ),
+          inject: [
+            HydrologyService,
+            HydrologyRepository,
+            CalibrationRepository,
+            StageForecastRepository,
+          ],
+        },
       ],
-      exports: [HydrologyService],
+      exports: [HydrologyService, StageForecastService],
     };
   }
 }

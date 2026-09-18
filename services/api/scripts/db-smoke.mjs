@@ -37,12 +37,13 @@ try {
     '0005_weather_forecasts.sql',
     '0006_rainfall.sql',
     '0007_hydrology_discharge.sql',
+    '0008_stage_calibration.sql',
   ];
   const appliedMigrations = await client.query(
     'SELECT migration_name FROM schema_migrations ORDER BY migration_name ASC',
   );
   if (JSON.stringify(appliedMigrations.rows.map((row) => row.migration_name)) !== JSON.stringify(expectedMigrations)) {
-    throw new Error('Expected migrations 0001 through 0007 to be applied in deterministic order.');
+    throw new Error('Expected migrations 0001 through 0008 to be applied in deterministic order.');
   }
 
   const expectedTables = [
@@ -77,6 +78,13 @@ try {
     'hydrology_forecast_runs',
     'hydrology_discharge_points',
     'hydrology_return_periods',
+    'gauge_reach_links',
+    'calibration_runs',
+    'calibration_metric_breakdowns',
+    'rating_curves',
+    'rating_curve_points',
+    'stage_forecast_runs',
+    'stage_forecast_points',
   ];
   const tables = await client.query(
     `SELECT table_name FROM information_schema.tables
@@ -177,6 +185,66 @@ try {
   ]) {
     if (!dischargePointColumns.has(required)) {
       throw new Error(`Hydrology discharge schema is missing ${required}.`);
+    }
+  }
+
+
+  const calibrationColumns = await client.query(
+    `SELECT table_name, column_name
+     FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = ANY($1::text[])`,
+    [[
+      'calibration_runs',
+      'rating_curves',
+      'stage_forecast_runs',
+      'stage_forecast_points',
+    ]],
+  );
+  const calibrationColumnMap = new Map();
+  for (const row of calibrationColumns.rows) {
+    const values = calibrationColumnMap.get(row.table_name) ?? new Set();
+    values.add(row.column_name);
+    calibrationColumnMap.set(row.table_name, values);
+  }
+  for (const [table, required] of Object.entries({
+    calibration_runs: [
+      'datum_id',
+      'test_mae_m',
+      'test_rmse_m',
+      'accepted_test_rmse_m',
+      'artifact_checksum_sha256',
+      'deployment_status',
+    ],
+    rating_curves: [
+      'datum_id',
+      'valid_discharge_min_cms',
+      'valid_discharge_max_cms',
+      'extrapolation_policy',
+      'curve_checksum_sha256',
+      'status',
+    ],
+    stage_forecast_runs: [
+      'datum_id',
+      'evidence_status',
+      'test_mae_m',
+      'test_rmse_m',
+      'normalized_checksum',
+    ],
+    stage_forecast_points: [
+      'lead_seconds',
+      'discharge_cms',
+      'derivation_status',
+      'stage_m',
+      'datum_id',
+      'extrapolated',
+    ],
+  })) {
+    const actual = calibrationColumnMap.get(table) ?? new Set();
+    for (const column of required) {
+      if (!actual.has(column)) {
+        throw new Error(`Stage calibration schema is missing ${table}.${column}.`);
+      }
     }
   }
 
@@ -407,7 +475,7 @@ try {
     postgisVersion: postgis.rows[0].version,
     checkedTables: expectedTables.length,
     checks: [
-      'migration-order-0001-through-0007',
+      'migration-order-0001-through-0008',
       'spatial-query',
       'administrative-area-constraints',
       'provider-policy-schema',
@@ -419,6 +487,8 @@ try {
       'rainfall-supported-window-constraint',
       'hydrology-discharge-only-schema',
       'hydrology-request-coordinate-non-persistence',
+      'stage-calibration-schema',
+      'stage-datum-and-evidence-columns',
       'harmonic-tide-model-schema',
       'admin-token-hash-schema',
       'raw-payload-idempotency-constraint',

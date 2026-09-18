@@ -1,34 +1,32 @@
-name: Phase 5D River Discharge
+name: Phase 5E River Rise Calibration
 
 on:
   pull_request:
     paths:
       - 'packages/shared-types/**'
-      - 'services/weather-worker/**'
       - 'services/api/**'
       - 'infrastructure/database/**'
-      - 'data/sources/**'
-      - 'docs/PHASE-5D-RIVER-DISCHARGE.md'
-      - 'docs/DATA-SOURCES.md'
+      - 'docs/superpowers/plans/2026-09-18-phase5e-river-rise-calibration.md'
+      - 'docs/PHASE-5E-RIVER-RISE.md'
       - 'docs/PROJECT-STATUS.md'
       - 'docs/ROADMAP.md'
       - 'pnpm-lock.yaml'
-      - '.github/workflows/phase5d-river-discharge.yml'
+      - '.github/workflows/phase5e-river-rise.yml'
 
 permissions:
   contents: read
 
 jobs:
-  phase5d:
-    name: River mapping/discharge/fallback gate
+  phase5e:
+    name: Datum/calibration/stage evidence gate
     runs-on: ubuntu-latest
     services:
       postgres:
         image: postgis/postgis:18-3.6
         env:
           POSTGRES_USER: connuoc
-          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: connuoc
+          POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
         options: >-
@@ -53,24 +51,21 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Apply migrations to fresh PostGIS database
         run: pnpm --filter @connuoc/api db:migrate
-      - name: Verify database schema and constraints
+      - name: Verify Phase 5E schema and constraints
         run: pnpm --filter @connuoc/api db:smoke
-      - name: Verify shared hydrology contracts
+      - name: Verify calibration contracts and rating-curve evaluator
         run: |
           pnpm --filter @connuoc/shared-types typecheck
           pnpm --filter @connuoc/shared-types test
-      - name: Verify hydrology adapters and source policy
-        run: |
-          pnpm --filter @connuoc/weather-worker typecheck
-          pnpm --filter @connuoc/weather-worker test
-          pnpm --filter @connuoc/weather-worker build
-      - name: Verify API unit contracts
+          pnpm --filter @connuoc/shared-types build
+      - name: Verify calibration API unit contracts
         run: |
           pnpm --filter @connuoc/api typecheck
           pnpm --filter @connuoc/api test
-      - name: Run focused Phase 5D end-to-end scenario
-        run: pnpm --filter @connuoc/api exec vitest run test/phase5d-river-discharge.integration.test.ts --maxWorkers=1
-      - name: Run API integration regression suite
+      - name: Verify repository activation rollback and persistence
+        run: |
+          pnpm --filter @connuoc/api exec vitest run             test/calibration.repository.integration.test.ts             test/phase5e-stage-api.integration.test.ts             --maxWorkers=1
+      - name: Run full API integration regression suite
         run: pnpm --filter @connuoc/api test:integration
       - name: Build API
         run: pnpm --filter @connuoc/api build
