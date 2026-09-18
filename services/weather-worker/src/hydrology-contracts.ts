@@ -29,6 +29,9 @@ export interface HydrologyAdapterRequest {
   readonly capability: HydrologySeriesCapability;
   readonly riverReachId: string;
   readonly providerReachId: string;
+  readonly latitude?: number;
+  readonly longitude?: number;
+  readonly modelRunAtUtc?: string;
   readonly days?: number;
   readonly startUtc?: string;
   readonly endUtc?: string;
