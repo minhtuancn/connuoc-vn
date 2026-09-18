@@ -1,5 +1,6 @@
 export * from './contracts.js';
 export * from './fixture-provider.js';
+export * from './geoglows-hydrology.js';
 export * from './hydrology-fixture.js';
 export * from './hydrology-contracts.js';
 export * from './imerg-normalizer.js';
