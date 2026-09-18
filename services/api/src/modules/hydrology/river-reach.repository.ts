@@ -241,9 +241,9 @@ export class RiverReachRepository {
 
     return {
       state:
-        ambiguousCount > 0 || mappedProviderCount > 1
+        ambiguousCount > 0
           ? 'AMBIGUOUS'
-          : mappedProviderCount === 1
+          : mappedProviderCount >= 1
             ? 'MAPPED'
             : 'UNMAPPED',
       bestConfidence:
