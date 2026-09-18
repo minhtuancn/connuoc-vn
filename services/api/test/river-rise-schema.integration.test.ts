@@ -64,18 +64,18 @@ beforeAll(async () => {
   const station = await client.query<{ id: string }>(
     `INSERT INTO stations (
        public_id, name, station_type, time_zone, location,
-       river_id, default_datum_id
+       river_id, river_reach_id, default_datum_id
      ) VALUES (
        'station:river-rise:schema',
        'River Rise Schema Gauge',
        'water_level',
        'Asia/Ho_Chi_Minh',
        ST_SetSRID(ST_MakePoint(105.5, 19.5), 4326),
-       $1,
+       $1, $2,
        'datum:river-rise:local'
      )
      RETURNING id`,
-    [river.rows[0]!.id],
+    [river.rows[0]!.id, reachId],
   );
   stationId = station.rows[0]!.id;
 });
