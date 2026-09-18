@@ -102,6 +102,7 @@ interface CurveRow {
 interface DeploymentRow extends CurveRow {
   calibration_datum_id: string;
   calibration_deployment_status: CalibrationRunSummary['deploymentStatus'];
+  calibration_version: string;
   model_kind: CalibrationRunSummary['modelKind'];
   model_version: string;
   feature_version: string;
