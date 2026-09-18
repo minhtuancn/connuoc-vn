@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import pg from 'pg';
+import { Pool } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { NormalizedRainfallBundle } from '@connuoc/weather-worker';
@@ -8,7 +8,6 @@ import { createApiApp } from '../src/bootstrap.js';
 import { parseApiEnvironment } from '../src/config/env.js';
 import { RainfallRepository } from '../src/modules/rainfall/rainfall.repository.js';
 
-const { Client } = pg;
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
   throw new Error('DATABASE_URL is required for the Phase 5C rainfall gate');
@@ -21,7 +20,7 @@ const environment = parseApiEnvironment({
   LOG_LEVEL: 'silent',
 });
 
-const client = new Client({
+const pool = new Pool({
   connectionString: databaseUrl,
   application_name: 'phase5c-rainfall-integration',
 });
@@ -84,8 +83,7 @@ function assertSafePublicRainfall(value: unknown): void {
 }
 
 beforeAll(async () => {
-  await client.connect();
-  await client.query(`TRUNCATE TABLE
+  await pool.query(`TRUNCATE TABLE
     rainfall_accumulations,
     rainfall_records,
     rainfall_runs,
@@ -95,18 +93,18 @@ beforeAll(async () => {
     data_sources
     RESTART IDENTITY CASCADE`);
 
-  const blockedSource = await client.query<{ id: string }>(
+  const blockedSource = await pool.query<{ id: string }>(
     `INSERT INTO data_sources (source_key, name, source_type)
      VALUES ('phase5c-blocked-source', 'Phase 5C blocked source', 'fixture')
      RETURNING id`,
   );
-  const allowedSource = await client.query<{ id: string }>(
+  const allowedSource = await pool.query<{ id: string }>(
     `INSERT INTO data_sources (source_key, name, source_type)
      VALUES ('phase5c-allowed-source', 'Phase 5C allowed source', 'fixture')
      RETURNING id`,
   );
 
-  const blockedProvider = await client.query<{ id: string }>(
+  const blockedProvider = await pool.query<{ id: string }>(
     `INSERT INTO provider_configs (
        provider_key, data_source_id, provider_type, enabled, priority, weight,
        secret_ref, commercial_use_status, redistribution_status, licence_status,
@@ -121,7 +119,7 @@ beforeAll(async () => {
      ) RETURNING id`,
     [blockedSource.rows[0]!.id],
   );
-  const allowedProvider = await client.query<{ id: string }>(
+  const allowedProvider = await pool.query<{ id: string }>(
     `INSERT INTO provider_configs (
        provider_key, data_source_id, provider_type, enabled, priority, weight,
        commercial_use_status, redistribution_status, licence_status,
@@ -139,7 +137,7 @@ beforeAll(async () => {
   allowedProviderId = allowedProvider.rows[0]!.id;
 
   for (const providerId of [blockedProvider.rows[0]!.id, allowedProviderId]) {
-    await client.query(
+    await pool.query(
       `INSERT INTO provider_capabilities (provider_config_id, capability, enabled)
        VALUES
          ($1, 'rainfall.observed', true),
@@ -149,7 +147,7 @@ beforeAll(async () => {
     );
   }
 
-  await new RainfallRepository(client as never).saveBundle(
+  await new RainfallRepository(pool).saveBundle(
     allowedProviderId,
     satelliteBundle,
     '2026-09-17T04:01:00Z',
@@ -162,7 +160,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await app?.close();
-  await client.end();
+  await pool.end();
 });
 
 describe('Phase 5C rainfall exit scenario', () => {
@@ -223,7 +221,7 @@ describe('Phase 5C rainfall exit scenario', () => {
     });
     assertSafePublicRainfall(live.json());
 
-    const persisted = await client.query<{ count: string }>(
+    const persisted = await pool.query<{ count: string }>(
       `SELECT count(*)::text AS count
        FROM rainfall_runs
        WHERE provider_config_id = $1 AND capability = 'rainfall.forecast'`,
@@ -231,7 +229,7 @@ describe('Phase 5C rainfall exit scenario', () => {
     );
     expect(Number(persisted.rows[0]!.count)).toBeGreaterThanOrEqual(1);
 
-    await client.query('UPDATE provider_configs SET enabled = false WHERE id = $1', [
+    await pool.query('UPDATE provider_configs SET enabled = false WHERE id = $1', [
       allowedProviderId,
     ]);
 
