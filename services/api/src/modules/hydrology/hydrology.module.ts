@@ -8,7 +8,7 @@ import {
 import { WeatherProviderRepository } from '../weather/weather-provider.repository.js';
 import { EnvironmentWeatherSecretResolver } from '../weather/weather-secret.resolver.js';
 import { CalibrationRepository } from '../calibration/calibration.repository.js';
-import { StageForecastController, StationCalibrationController } from '../calibration/stage-forecast.controller.js';
+import { StageForecastController, StationCalibrationController } from '../calibration/calibration.controller.js';
 import { StageForecastRepository } from '../calibration/stage-forecast.repository.js';
 import { StageForecastService } from '../calibration/stage-forecast.service.js';
 import { HydrologyAdapterFactory } from './hydrology-adapter.factory.js';
