@@ -98,7 +98,7 @@ CREATE TABLE calibration_runs (
   CONSTRAINT calibration_runs_checksum_sha256
     CHECK (artifact_checksum_sha256 ~ '^[0-9a-f]{64}$'),
   CONSTRAINT calibration_runs_deployment_status
-    CHECK (deployment_status IN ('CANDIDATE', 'ACTIVE', 'ROLLED_BACK', 'REJECTED')),
+    CHECK (deployment_status IN ('CANDIDATE', 'ACTIVE', 'SUPERSEDED', 'ROLLED_BACK', 'REJECTED')),
   CONSTRAINT calibration_runs_active_evidence CHECK (
     deployment_status <> 'ACTIVE'
     OR (
