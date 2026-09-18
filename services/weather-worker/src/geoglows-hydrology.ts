@@ -538,7 +538,7 @@ export class GeoglowsHydrologyAdapter implements HydrologyProviderAdapter {
               flags: ['MODEL_FORECAST', 'ENSEMBLE_STATISTIC'],
             },
             source: this.source(
-              'geoglows-v2-forecaststats',
+              'geoglows-v2-discharge-ensemble',
               statsMeta.generatedAt ?? compactInstant(this.now()),
             ),
           }),
@@ -582,7 +582,7 @@ export class GeoglowsHydrologyAdapter implements HydrologyProviderAdapter {
               flags: ['MODEL_FORECAST', 'ENSEMBLE_MEMBER'],
             },
             source: this.source(
-              'geoglows-v2-forecastensemble',
+              'geoglows-v2-discharge-ensemble',
               ensembleMeta.generatedAt ?? compactInstant(this.now()),
             ),
           }),
