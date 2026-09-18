@@ -177,14 +177,14 @@ Từ 01/07/2025, mô hình chính quyền địa phương hiện hành của Vi�
 - [x] #54 Phase 5B — Multi-provider weather forecasts + normalized public APIs — **completed and merged via PR #102**.
 - [x] #55 Phase 5C — Rainfall observations/history/forecast + accumulation features — **completed and regression-gated in PR #109**.
 - [x] #56 Phase 5D — River network enrichment + GEOGLOWS/GloFAS discharge forecasts — **completed and regression-gated in PR #110**.
-- [ ] #57 Phase 5E — Gauge calibration, rating curves + river-rise forecasts.
+- [x] #57 Phase 5E — Gauge calibration, rating curves + river-rise forecasts — **completed and regression-gated in PR #112**.
 - [ ] #58 Phase 5F — Flood-risk engine + hazard/susceptibility baselines.
 - [ ] #59 Phase 5G — Vietnamese official alerts + partner-feed framework.
 - [ ] #60 Phase 5H — Admin provider configuration, health, quota + usage operations.
 - [ ] #61 Phase 5I — Mobile/web weather, river + flood-risk journeys with location UX.
 - [ ] #62 Phase 5J — Pilot calibration, backtesting + Phase 5 exit gate.
 
-Phase 5 snapshot 2026-09-18: **4 workstreams completed, 6 remaining**. The subsystem now has location/provider, normalized weather, normalized rainfall and normalized river-discharge foundations, but is not yet close to the Phase 5 exit gate because local stage calibration, flood risk and pilot validation remain.
+Phase 5 snapshot 2026-09-18: **5 workstreams completed, 5 remaining**. The subsystem now has location/provider, normalized weather, normalized rainfall, normalized river-discharge and evidence-gated calibrated-stage foundations. Flood-risk validation, official warnings, provider operations, presentation journeys and pilot/backtesting remain before the Phase 5 exit gate.
 
 Dependency graph:
 
@@ -213,6 +213,7 @@ Dependency graph:
 - Observed, estimated, forecast, simulated, derived and stale values remain explicitly distinct.
 - Never fabricate stage/water level from discharge.
 - A precise future stage requires provider-native stage with known datum, a validated rating curve, or a locally calibrated model with documented metrics.
+- Phase 5E rating-curve deployment requires exact gauge datum match, immutable versioned scientific artifacts, held-out MAE/RMSE and lead-time evidence; outside the validated discharge domain the stage value remains unavailable rather than extrapolated.
 - Numerical flood probability requires an explicitly calibrated probability model and validation set; otherwise expose risk band/confidence/reasons.
 - Official Vietnamese warnings remain separately attributed and are never transformed into an invented internal probability.
 - Coarse/global flood products are hazard/susceptibility baselines, not official street-level inundation maps.
@@ -223,11 +224,12 @@ Dependency graph:
 2. Phase 5B normalized weather provider/API foundation.
 3. Phase 5C normalized rainfall observations/history/forecast, accumulation and bounded LKG foundation.
 4. Phase 5D normalized river-reach/discharge provider, persistence and public-API foundation.
-5. Build an evidence-rich pilot with weather/rain/discharge data and calibrate/backtest station/river-rise/flood-risk only where local observations support it.
-6. Northern delta/estuaries.
-7. Central coast.
-8. Southern delta/coast.
-9. Expand to nationwide coverage while preserving explicit availability/confidence labels.
+5. Phase 5E adds evidence-gated local stage calibration/rating curves where gauge datum and held-out validation support it.
+6. Build an evidence-rich pilot for Phase 5F risk modelling and backtesting using weather/rain/discharge/stage evidence.
+7. Northern delta/estuaries.
+8. Central coast.
+9. Southern delta/coast.
+10. Expand to nationwide coverage while preserving explicit availability/confidence labels.
 
 ### Exit criteria
 - Coverage page clearly says where data is observed, predicted, derived/interpolated or unavailable.
