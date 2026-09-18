@@ -36,12 +36,13 @@ try {
     '0004_weather_provider_foundation.sql',
     '0005_weather_forecasts.sql',
     '0006_rainfall.sql',
+    '0007_hydrology_discharge.sql',
   ];
   const appliedMigrations = await client.query(
     'SELECT migration_name FROM schema_migrations ORDER BY migration_name ASC',
   );
   if (JSON.stringify(appliedMigrations.rows.map((row) => row.migration_name)) !== JSON.stringify(expectedMigrations)) {
-    throw new Error('Expected migrations 0001 through 0006 to be applied in deterministic order.');
+    throw new Error('Expected migrations 0001 through 0007 to be applied in deterministic order.');
   }
 
   const expectedTables = [
@@ -71,6 +72,11 @@ try {
     'rainfall_runs',
     'rainfall_records',
     'rainfall_accumulations',
+    'river_reaches',
+    'river_reach_provider_mappings',
+    'hydrology_forecast_runs',
+    'hydrology_discharge_points',
+    'hydrology_return_periods',
   ];
   const tables = await client.query(
     `SELECT table_name FROM information_schema.tables
@@ -121,6 +127,56 @@ try {
   for (const required of ['spatial_point', 'normalized_checksum', 'stale_after', 'source_registry_id', 'object_uris']) {
     if (!rainfallColumnNames.has(required)) {
       throw new Error(`Rainfall history schema is missing ${required}.`);
+    }
+  }
+
+  const hydrologyTables = [
+    'river_reaches',
+    'river_reach_provider_mappings',
+    'hydrology_forecast_runs',
+    'hydrology_discharge_points',
+    'hydrology_return_periods',
+  ];
+  const hydrologyColumns = await client.query(
+    `SELECT table_name, column_name
+     FROM information_schema.columns
+     WHERE table_schema = 'public' AND table_name = ANY($1::text[])`,
+    [hydrologyTables],
+  );
+  const forbiddenHydrologyColumns = new Set([
+    'request_latitude',
+    'request_longitude',
+    'user_latitude',
+    'user_longitude',
+    'stage',
+    'stage_m',
+    'water_level',
+    'water_level_m',
+    'datum_id',
+  ]);
+  for (const row of hydrologyColumns.rows) {
+    if (forbiddenHydrologyColumns.has(row.column_name)) {
+      throw new Error(
+        `Phase 5D hydrology schema must not contain stage/request-history column ${row.table_name}.${row.column_name}.`,
+      );
+    }
+  }
+  const dischargePointColumns = new Set(
+    hydrologyColumns.rows
+      .filter((row) => row.table_name === 'hydrology_discharge_points')
+      .map((row) => row.column_name),
+  );
+  for (const required of [
+    'product_kind',
+    'valid_at',
+    'lead_seconds',
+    'discharge_cms',
+    'unit',
+    'ensemble_member',
+    'statistic',
+  ]) {
+    if (!dischargePointColumns.has(required)) {
+      throw new Error(`Hydrology discharge schema is missing ${required}.`);
     }
   }
 
@@ -351,7 +407,7 @@ try {
     postgisVersion: postgis.rows[0].version,
     checkedTables: expectedTables.length,
     checks: [
-      'migration-order-0001-through-0006',
+      'migration-order-0001-through-0007',
       'spatial-query',
       'administrative-area-constraints',
       'provider-policy-schema',
@@ -361,6 +417,8 @@ try {
       'rainfall-history-schema',
       'rainfall-request-coordinate-non-persistence',
       'rainfall-supported-window-constraint',
+      'hydrology-discharge-only-schema',
+      'hydrology-request-coordinate-non-persistence',
       'harmonic-tide-model-schema',
       'admin-token-hash-schema',
       'raw-payload-idempotency-constraint',
