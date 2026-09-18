@@ -209,14 +209,14 @@ describe('Phase 5D hydrology schema', () => {
     );
     expect(points.rows).toEqual([
       {
-        product_kind: 'FORECAST_ENSEMBLE_MEMBER',
-        ensemble_member: 7,
-        statistic: null,
-      },
-      {
         product_kind: 'FORECAST_MEAN',
         ensemble_member: null,
         statistic: 'MEAN',
+      },
+      {
+        product_kind: 'FORECAST_ENSEMBLE_MEMBER',
+        ensemble_member: 7,
+        statistic: null,
       },
     ]);
 
