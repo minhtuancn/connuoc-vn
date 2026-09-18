@@ -26,7 +26,7 @@ export type RiverReachMappingMethod = z.infer<typeof RiverReachMappingMethodSche
 export const RiverReachMappingCandidateSchema = z
   .object({
     providerReachId: NonEmptyIdSchema,
-    distanceKm: DistanceKmSchema,
+    distanceKm: DistanceKmSchema.nullable(),
     confidence: MappingConfidenceSchema,
   })
   .strict();
@@ -269,15 +269,17 @@ export const HydrologyReturnPeriodRecordSchema = z
     returnPeriodYears: z.number().int().min(2).max(10_000),
     dischargeCms: DischargeCmsSchema,
     unit: z.literal('m3/s'),
-    retrospectivePeriodStart: IsoInstantSchema,
-    retrospectivePeriodEnd: IsoInstantSchema,
+    retrospectivePeriodStart: IsoInstantSchema.nullable(),
+    retrospectivePeriodEnd: IsoInstantSchema.nullable(),
     source: HydrologySourceProvenanceSchema,
   })
   .strict()
   .superRefine((value, context) => {
     if (
+      value.retrospectivePeriodStart !== null &&
+      value.retrospectivePeriodEnd !== null &&
       Date.parse(value.retrospectivePeriodEnd) <=
-      Date.parse(value.retrospectivePeriodStart)
+        Date.parse(value.retrospectivePeriodStart)
     ) {
       context.addIssue({
         code: 'custom',
