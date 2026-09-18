@@ -1,5 +1,6 @@
 export * from './common.js';
 export * from './geography.js';
+export * from './hydrology.js';
 export * from './ids.js';
 export * from './location.js';
 export * from './provider.js';

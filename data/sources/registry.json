@@ -1,7 +1,7 @@
 {
   "$schema": "./registry.schema.json",
   "schemaVersion": 2,
-  "reviewedAt": "2026-09-17",
+  "reviewedAt": "2026-09-18",
   "sources": [
     {
       "id": "vn-nchmf-tide-bulletins",
@@ -9,12 +9,17 @@
       "operator": "Trung tâm Dự báo Khí tượng Thủy văn Quốc gia (NCHMF)",
       "jurisdiction": "VN",
       "authority": "authoritative",
-      "kind": ["tide_forecast", "marine_bulletin"],
+      "kind": [
+        "tide_forecast",
+        "marine_bulletin"
+      ],
       "homepageUrl": "https://www.nchmf.gov.vn/kttv/",
       "accessMethod": "publication",
       "policyVersion": 1,
       "termsReviewedAt": "2026-09-17",
-      "termsReference": ["https://www.nchmf.gov.vn/kttv/"],
+      "termsReference": [
+        "https://www.nchmf.gov.vn/kttv/"
+      ],
       "licenseStatus": "APPROVAL_REQUIRED",
       "commercialUseStatus": "UNKNOWN",
       "redistribution": "UNKNOWN",
@@ -30,7 +35,11 @@
       "operator": "NOAA Center for Operational Oceanographic Products and Services (CO-OPS)",
       "jurisdiction": "US",
       "authority": "authoritative",
-      "kind": ["harmonic_constituents", "datum", "tide_metadata"],
+      "kind": [
+        "harmonic_constituents",
+        "datum",
+        "tide_metadata"
+      ],
       "homepageUrl": "https://tidesandcurrents.noaa.gov/",
       "apiDocumentationUrl": "https://api.tidesandcurrents.noaa.gov/mdapi/prod/",
       "accessMethod": "api",
@@ -55,11 +64,15 @@
       "operator": "Con Nước Việt maintainers",
       "jurisdiction": "VN",
       "authority": "derived_reference",
-      "kind": ["lunar_calendar_fixture"],
+      "kind": [
+        "lunar_calendar_fixture"
+      ],
       "accessMethod": "manual_multi_source_verification",
       "policyVersion": 1,
       "termsReviewedAt": "2026-09-17",
-      "termsReference": ["docs/DATA-SOURCES.md"],
+      "termsReference": [
+        "docs/DATA-SOURCES.md"
+      ],
       "licenseStatus": "FACTS_ONLY_NO_SOURCE_TABLE_COPYING",
       "commercialUseStatus": "UNKNOWN",
       "redistribution": "ALLOWED",
@@ -75,11 +88,16 @@
       "operator": "Con Nước Việt maintainers",
       "jurisdiction": "global",
       "authority": "synthetic",
-      "kind": ["tide_fixture", "algorithm_fixture"],
+      "kind": [
+        "tide_fixture",
+        "algorithm_fixture"
+      ],
       "accessMethod": "generated",
       "policyVersion": 1,
       "termsReviewedAt": "2026-09-17",
-      "termsReference": ["docs/DATA-SOURCES.md"],
+      "termsReference": [
+        "docs/DATA-SOURCES.md"
+      ],
       "licenseStatus": "REPOSITORY_POLICY",
       "commercialUseStatus": "UNKNOWN",
       "redistribution": "ALLOWED",
@@ -95,7 +113,12 @@
       "operator": "Open-Meteo",
       "jurisdiction": "global",
       "authority": "aggregated_model_service",
-      "kind": ["weather_forecast", "historical_weather", "ensemble_weather", "flood_discharge"],
+      "kind": [
+        "weather_forecast",
+        "historical_weather",
+        "ensemble_weather",
+        "flood_discharge"
+      ],
       "homepageUrl": "https://open-meteo.com/",
       "accessMethod": "hosted_api",
       "policyVersion": 1,
@@ -119,7 +142,12 @@
       "operator": "Open-Meteo",
       "jurisdiction": "global",
       "authority": "aggregated_model_service",
-      "kind": ["weather_forecast", "historical_weather", "ensemble_weather", "flood_discharge"],
+      "kind": [
+        "weather_forecast",
+        "historical_weather",
+        "ensemble_weather",
+        "flood_discharge"
+      ],
       "homepageUrl": "https://open-meteo.com/",
       "accessMethod": "hosted_api_subscription",
       "policyVersion": 1,
@@ -143,7 +171,11 @@
       "operator": "Open-Meteo / Con Nước Việt deployment",
       "jurisdiction": "global",
       "authority": "self_hosted_model_aggregation",
-      "kind": ["weather_forecast", "historical_weather", "ensemble_weather"],
+      "kind": [
+        "weather_forecast",
+        "historical_weather",
+        "ensemble_weather"
+      ],
       "homepageUrl": "https://open-meteo.com/",
       "accessMethod": "self_hosted",
       "policyVersion": 1,
@@ -167,24 +199,30 @@
       "operator": "GEOGLOWS",
       "jurisdiction": "global",
       "authority": "hydrologic_model_service",
-      "kind": ["river_discharge_forecast", "forecast_ensemble", "retrospective_streamflow", "return_periods"],
+      "kind": [
+        "river_discharge_forecast",
+        "forecast_ensemble",
+        "retrospective_streamflow",
+        "return_periods"
+      ],
       "homepageUrl": "https://geoglows.ecmwf.int/",
       "apiDocumentationUrl": "https://geoglows.ecmwf.int/documentation",
       "accessMethod": "api",
       "policyVersion": 1,
-      "termsReviewedAt": "2026-09-17",
+      "termsReviewedAt": "2026-09-18",
       "termsReference": [
         "https://geoglows.ecmwf.int/license",
+        "https://training.geoglows.org/rfs/datasets/catalog/",
         "https://geoglows.ecmwf.int/documentation"
       ],
-      "licenseStatus": "CC-BY-4.0_DATA__BSD-3-CLAUSE_SOFTWARE",
-      "commercialUseStatus": "ALLOWED",
-      "redistribution": "ATTRIBUTION_REQUIRED",
-      "rawPayloadRetention": "ALLOWED_WITH_ATTRIBUTION",
-      "attribution": "Contains information from the GEOGLOWS ECMWF Streamflow Service made available under CC BY 4.0",
+      "licenseStatus": "PRODUCT_SCOPE_CONFLICT_REVIEW_REQUIRED",
+      "commercialUseStatus": "UNKNOWN",
+      "redistribution": "UNKNOWN",
+      "rawPayloadRetention": "REFERENCE_ONLY",
+      "attribution": "GEOGLOWS / ECMWF Streamflow Service — retain exact product/version attribution pending product-scope licence clarification",
       "datumStatus": "discharge_not_stage; never infer gauge stage without local calibration",
       "timeSemantics": "Forecast run and valid time must be stored separately; retrospective products are model simulations, not observations",
-      "notes": "GEOGLOWS data is CC BY 4.0 and permits commercial use with attribution. Treat discharge as modeled streamflow; converting to local water level requires validated gauge/datum/rating-curve or other calibrated model."
+      "notes": "Fail closed for production commercial use as of 2026-09-18: the Streamflow Service licence page states CC BY 4.0 for service data, while the RFS V2 dataset catalog states CC BY-NC-SA 4.0 for RFS V2 datasets. Do not infer which notice governs a specific v2 REST/AWS product until product-level scope is clarified. Discharge remains modeled streamflow, never local gauge stage without validated calibration."
     },
     {
       "id": "nasa-gpm-imerg",
@@ -192,7 +230,11 @@
       "operator": "NASA Global Precipitation Measurement Mission",
       "jurisdiction": "global",
       "authority": "satellite_precipitation_product",
-      "kind": ["observed_precipitation", "near_real_time_precipitation", "historical_precipitation"],
+      "kind": [
+        "observed_precipitation",
+        "near_real_time_precipitation",
+        "historical_precipitation"
+      ],
       "homepageUrl": "https://gpm.nasa.gov/data",
       "accessMethod": "nasa_archive",
       "policyVersion": 1,
@@ -216,12 +258,19 @@
       "operator": "Trung tâm Dự báo Khí tượng Thủy văn Quốc gia (NCHMF)",
       "jurisdiction": "VN",
       "authority": "authoritative",
-      "kind": ["weather_warning", "rainfall", "hydrology_bulletin", "flood_warning"],
+      "kind": [
+        "weather_warning",
+        "rainfall",
+        "hydrology_bulletin",
+        "flood_warning"
+      ],
       "homepageUrl": "https://www.nchmf.gov.vn/kttv/",
       "accessMethod": "candidate_official_or_partner_feed",
       "policyVersion": 1,
       "termsReviewedAt": "2026-09-17",
-      "termsReference": ["https://www.nchmf.gov.vn/kttv/"],
+      "termsReference": [
+        "https://www.nchmf.gov.vn/kttv/"
+      ],
       "licenseStatus": "APPROVAL_REQUIRED",
       "commercialUseStatus": "UNKNOWN",
       "redistribution": "UNKNOWN",

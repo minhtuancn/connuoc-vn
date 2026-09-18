@@ -1,0 +1,76 @@
+name: Phase 5D River Discharge
+
+on:
+  pull_request:
+    paths:
+      - 'packages/shared-types/**'
+      - 'services/weather-worker/**'
+      - 'services/api/**'
+      - 'infrastructure/database/**'
+      - 'data/sources/**'
+      - 'docs/PHASE-5D-RIVER-DISCHARGE.md'
+      - 'docs/DATA-SOURCES.md'
+      - 'docs/PROJECT-STATUS.md'
+      - 'docs/ROADMAP.md'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/phase5d-river-discharge.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  phase5d:
+    name: River mapping/discharge/fallback gate
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:18-3.6
+        env:
+          POSTGRES_USER: connuoc
+          POSTGRES_PASSWORD: connuoc
+          POSTGRES_DB: connuoc
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U connuoc -d connuoc"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://connuoc:connuoc@localhost:5432/connuoc
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+          run_install: false
+      - name: Install workspace dependencies from lockfile
+        run: pnpm install --frozen-lockfile
+      - name: Apply migrations to fresh PostGIS database
+        run: pnpm --filter @connuoc/api db:migrate
+      - name: Verify database schema and constraints
+        run: pnpm --filter @connuoc/api db:smoke
+      - name: Verify shared hydrology contracts
+        run: |
+          pnpm --filter @connuoc/shared-types typecheck
+          pnpm --filter @connuoc/shared-types test
+      - name: Verify hydrology adapters and source policy
+        run: |
+          pnpm --filter @connuoc/weather-worker typecheck
+          pnpm --filter @connuoc/weather-worker test
+          pnpm --filter @connuoc/weather-worker build
+      - name: Verify API unit contracts
+        run: |
+          pnpm --filter @connuoc/api typecheck
+          pnpm --filter @connuoc/api test
+      - name: Run focused Phase 5D end-to-end scenario
+        run: pnpm --filter @connuoc/api exec vitest run test/phase5d-river-discharge.integration.test.ts --maxWorkers=1
+      - name: Run API integration regression suite
+        run: pnpm --filter @connuoc/api test:integration
+      - name: Build API
+        run: pnpm --filter @connuoc/api build
