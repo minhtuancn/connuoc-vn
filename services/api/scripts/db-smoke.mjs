@@ -37,12 +37,13 @@ try {
     '0005_weather_forecasts.sql',
     '0006_rainfall.sql',
     '0007_hydrology_discharge.sql',
+    '0008_river_rise_calibration.sql',
   ];
   const appliedMigrations = await client.query(
     'SELECT migration_name FROM schema_migrations ORDER BY migration_name ASC',
   );
   if (JSON.stringify(appliedMigrations.rows.map((row) => row.migration_name)) !== JSON.stringify(expectedMigrations)) {
-    throw new Error('Expected migrations 0001 through 0007 to be applied in deterministic order.');
+    throw new Error('Expected migrations 0001 through 0008 to be applied in deterministic order.');
   }
 
   const expectedTables = [
@@ -77,6 +78,10 @@ try {
     'hydrology_forecast_runs',
     'hydrology_discharge_points',
     'hydrology_return_periods',
+    'calibration_runs',
+    'rating_curves',
+    'river_stage_forecast_runs',
+    'river_stage_forecast_points',
   ];
   const tables = await client.query(
     `SELECT table_name FROM information_schema.tables
@@ -161,6 +166,62 @@ try {
       );
     }
   }
+  const riverRiseTables = [
+    'calibration_runs',
+    'rating_curves',
+    'river_stage_forecast_runs',
+    'river_stage_forecast_points',
+  ];
+  const riverRiseColumns = await client.query(
+    `SELECT table_name, column_name
+     FROM information_schema.columns
+     WHERE table_schema = 'public' AND table_name = ANY($1::text[])`,
+    [riverRiseTables],
+  );
+  const ratingCurveColumns = new Set(
+    riverRiseColumns.rows
+      .filter((row) => row.table_name === 'rating_curves')
+      .map((row) => row.column_name),
+  );
+  for (const required of [
+    'station_id',
+    'river_reach_id',
+    'calibration_run_id',
+    'datum_id',
+    'points',
+    'min_discharge_cms',
+    'max_discharge_cms',
+    'validation_rmse_m',
+    'artifact_sha256',
+    'status',
+  ]) {
+    if (!ratingCurveColumns.has(required)) {
+      throw new Error(`Rating-curve schema is missing ${required}.`);
+    }
+  }
+  const calibrationColumns = new Set(
+    riverRiseColumns.rows
+      .filter((row) => row.table_name === 'calibration_runs')
+      .map((row) => row.column_name),
+  );
+  for (const required of [
+    'model_family',
+    'model_version',
+    'feature_version',
+    'training_start',
+    'validation_start',
+    'test_start',
+    'mae_m',
+    'rmse_m',
+    'artifact_sha256',
+    'baseline_rmse_m',
+    'status',
+  ]) {
+    if (!calibrationColumns.has(required)) {
+      throw new Error(`Calibration-run schema is missing ${required}.`);
+    }
+  }
+
   const dischargePointColumns = new Set(
     hydrologyColumns.rows
       .filter((row) => row.table_name === 'hydrology_discharge_points')
@@ -407,7 +468,7 @@ try {
     postgisVersion: postgis.rows[0].version,
     checkedTables: expectedTables.length,
     checks: [
-      'migration-order-0001-through-0007',
+      'migration-order-0001-through-0008',
       'spatial-query',
       'administrative-area-constraints',
       'provider-policy-schema',
@@ -419,6 +480,8 @@ try {
       'rainfall-supported-window-constraint',
       'hydrology-discharge-only-schema',
       'hydrology-request-coordinate-non-persistence',
+      'rating-curve-calibration-schema',
+      'river-stage-forecast-schema',
       'harmonic-tide-model-schema',
       'admin-token-hash-schema',
       'raw-payload-idempotency-constraint',
