@@ -19,6 +19,22 @@ export interface NearbyRiverReach {
   readonly distanceKm: number;
 }
 
+export interface RiverReachDetail {
+  readonly publicId: string;
+  readonly name: string;
+  readonly riverPublicId: string | null;
+  readonly basinPublicId: string | null;
+  readonly latitude: number;
+  readonly longitude: number;
+}
+
+export interface RiverReachMappingSummary {
+  readonly state: 'MAPPED' | 'AMBIGUOUS' | 'UNMAPPED';
+  readonly bestConfidence: number | null;
+  readonly mappedProviderCount: number;
+  readonly candidateCount: number;
+}
+
 export interface ProviderReachResolutionQuery {
   readonly riverReachPublicId: string;
   readonly providerConfigId: string;
@@ -39,6 +55,22 @@ interface ProviderMappingRow {
   mapping_state: 'MAPPED' | 'AMBIGUOUS' | null;
   confidence: number | string | null;
   distance_km: number | string | null;
+}
+
+interface ReachDetailRow {
+  public_id: string;
+  name: string;
+  river_public_id: string | null;
+  basin_public_id: string | null;
+  latitude: number | string;
+  longitude: number | string;
+}
+
+interface MappingSummaryRow {
+  mapped_provider_count: number | string;
+  ambiguous_count: number | string;
+  candidate_count: number | string;
+  best_confidence: number | string | null;
 }
 
 function asNumber(value: number | string): number {
@@ -120,6 +152,90 @@ export class RiverReachRepository {
       basinPublicId: row.basin_public_id,
       distanceKm: asNumber(row.distance_km),
     }));
+  }
+
+  async findByPublicId(
+    riverReachPublicId: string,
+  ): Promise<RiverReachDetail | null> {
+    if (riverReachPublicId.trim().length === 0) {
+      throw new RangeError('riverReachPublicId must not be empty');
+    }
+
+    const result = await this.database().query<ReachDetailRow>(
+      `SELECT
+         rr.public_id,
+         rr.name,
+         r.public_id AS river_public_id,
+         b.public_id AS basin_public_id,
+         ST_Y(ST_PointOnSurface(rr.geometry)) AS latitude,
+         ST_X(ST_PointOnSurface(rr.geometry)) AS longitude
+       FROM river_reaches rr
+       LEFT JOIN rivers r ON r.id = rr.river_id
+       LEFT JOIN basins b ON b.id = rr.basin_id
+       WHERE rr.public_id = $1
+         AND rr.geometry IS NOT NULL
+       LIMIT 1`,
+      [riverReachPublicId],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+
+    return {
+      publicId: row.public_id,
+      name: row.name,
+      riverPublicId: row.river_public_id,
+      basinPublicId: row.basin_public_id,
+      latitude: asNumber(row.latitude),
+      longitude: asNumber(row.longitude),
+    };
+  }
+
+  async findMappingSummary(
+    riverReachPublicId: string,
+    atUtc: string,
+  ): Promise<RiverReachMappingSummary | null> {
+    if (riverReachPublicId.trim().length === 0) {
+      throw new RangeError('riverReachPublicId must not be empty');
+    }
+    assertInstant(atUtc);
+
+    const result = await this.database().query<MappingSummaryRow>(
+      `SELECT
+         count(DISTINCT m.provider_config_id)
+           FILTER (WHERE m.mapping_state = 'MAPPED') AS mapped_provider_count,
+         count(*) FILTER (WHERE m.mapping_state = 'AMBIGUOUS') AS ambiguous_count,
+         count(DISTINCT m.provider_reach_id) AS candidate_count,
+         max(m.confidence) AS best_confidence
+       FROM river_reaches rr
+       LEFT JOIN river_reach_provider_mappings m
+         ON m.river_reach_id = rr.id
+        AND m.effective_from <= $2::timestamptz
+        AND (m.effective_to IS NULL OR m.effective_to >= $2::timestamptz)
+       WHERE rr.public_id = $1
+       GROUP BY rr.id`,
+      [riverReachPublicId, atUtc],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+
+    const mappedProviderCount = asNumber(row.mapped_provider_count);
+    const ambiguousCount = asNumber(row.ambiguous_count);
+    const candidateCount = asNumber(row.candidate_count);
+
+    return {
+      state:
+        ambiguousCount > 0 || mappedProviderCount > 1
+          ? 'AMBIGUOUS'
+          : mappedProviderCount === 1
+            ? 'MAPPED'
+            : 'UNMAPPED',
+      bestConfidence:
+        row.best_confidence === null
+          ? null
+          : asNumber(row.best_confidence),
+      mappedProviderCount,
+      candidateCount,
+    };
   }
 
   async findProviderResolution(
