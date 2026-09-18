@@ -82,10 +82,18 @@ function compactInstant(date: Date): string {
 }
 
 function publicRecord(record: RainfallRecord): PublicRainfallRecord {
-  const { providerConfigId: _providerConfigId, ...source } = record.source;
   return {
     ...record,
-    source,
+    source: {
+      sourceId: record.source.sourceId,
+      productId: record.source.productId,
+      productVersion: record.source.productVersion,
+      modelRunAt: record.source.modelRunAt,
+      observedAt: record.source.observedAt,
+      fetchedAt: record.source.fetchedAt,
+      attributionText: record.source.attributionText,
+      attributionUrl: record.source.attributionUrl,
+    },
   };
 }
 
