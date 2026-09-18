@@ -94,6 +94,7 @@ export const CalibrationRunSummarySchema = z
     stationId: NonEmptyIdSchema,
     riverReachId: NonEmptyIdSchema,
     datumId: NonEmptyIdSchema,
+    sourceIds: z.array(NonEmptyIdSchema).min(1).max(64),
     modelKind: CalibrationModelKindSchema,
     modelVersion: NonEmptyIdSchema,
     featureVersion: NonEmptyIdSchema,
