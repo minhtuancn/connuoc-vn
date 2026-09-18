@@ -1,3 +1,10 @@
+ALTER TABLE stations
+  ADD COLUMN river_reach_id uuid REFERENCES river_reaches(id) ON DELETE SET NULL;
+
+CREATE INDEX stations_river_reach_idx
+  ON stations (river_reach_id)
+  WHERE river_reach_id IS NOT NULL;
+
 CREATE TABLE calibration_runs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   public_id text NOT NULL UNIQUE,
