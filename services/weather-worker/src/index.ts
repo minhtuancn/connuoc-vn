@@ -6,6 +6,7 @@ export * from './hydrology-contracts.js';
 export * from './imerg-normalizer.js';
 export * from './open-meteo.js';
 export * from './open-meteo-rainfall.js';
+export * from './open-meteo-flood-hydrology.js';
 export * from './provider-selector.js';
 export * from './rainfall-accumulation.js';
 export * from './rainfall-contracts.js';
