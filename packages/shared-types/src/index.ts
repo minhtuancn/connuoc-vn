@@ -1,6 +1,7 @@
 export * from './common.js';
 export * from './calibration.js';
 export * from './geography.js';
+export * from './flood-risk.js';
 export * from './hydrology.js';
 export * from './ids.js';
 export * from './location.js';
