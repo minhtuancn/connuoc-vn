@@ -6,6 +6,7 @@ import {
   Inject,
   Param,
   Query,
+  NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import {
@@ -17,7 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { z } from 'zod';
 
-import { HydrologyUnavailableError } from '../hydrology/hydrology.service.js';
+import { HydrologyUnavailableError, RiverReachNotFoundError } from '../hydrology/hydrology.service.js';
 import { StageForecastService } from './stage-forecast.service.js';
 
 const PublicIdSchema = z.string().trim().min(1).max(240);
@@ -88,9 +89,18 @@ export class StageForecastController {
       );
     } catch (error) {
       if (error instanceof HydrologyUnavailableError) {
-        throw new ServiceUnavailableException(
-          'Hydrology discharge data is temporarily unavailable.',
-        );
+        throw new ServiceUnavailableException({
+          statusCode: 503,
+          code: 'HYDROLOGY_UNAVAILABLE',
+          message: 'Hydrology data is temporarily unavailable.',
+        });
+      }
+      if (error instanceof RiverReachNotFoundError) {
+        throw new NotFoundException({
+          statusCode: 404,
+          code: error.code,
+          message: error.message,
+        });
       }
       if (error instanceof RangeError) {
         throw new BadRequestException(error.message);
