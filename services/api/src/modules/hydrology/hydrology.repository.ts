@@ -650,8 +650,13 @@ export class HydrologyRepository {
          AND h.source_registry_id = $3
          AND h.product_id = $4
          AND h.product_version IS NOT DISTINCT FROM $5
-         AND h.fetched_at = $6::timestamptz
-       ORDER BY h.created_at DESC, h.id ASC
+       ORDER BY
+         CASE
+           WHEN h.fetched_at = $6::timestamptz THEN 0
+           ELSE 1
+         END,
+         h.created_at DESC,
+         h.id ASC
        LIMIT 1`,
       [
         query.riverReachPublicId,
