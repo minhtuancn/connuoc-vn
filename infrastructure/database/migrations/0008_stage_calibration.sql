@@ -395,6 +395,9 @@ BEGIN
   WHERE id = target_curve_id;
 
   IF curve_status IS NULL THEN
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    END IF;
     RAISE EXCEPTION 'rating curve does not exist';
   END IF;
 
