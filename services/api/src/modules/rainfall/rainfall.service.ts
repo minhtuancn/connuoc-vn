@@ -253,15 +253,17 @@ export class RainfallService {
 
     return {
       at: atUtc,
-      windows: accumulations.map((accumulation) => ({
-        ...accumulation,
-        productKinds: uniqueSorted(
-          accumulation.inputRecordIds.flatMap((recordId) => {
-            const record = byId.get(recordId);
-            return record ? [record.productKind] : [];
-          }),
-        ),
-      })),
+      windows: accumulations
+        .filter((accumulation) => accumulation.coverageRatio >= 0.5)
+        .map((accumulation) => ({
+          ...accumulation,
+          productKinds: uniqueSorted(
+            accumulation.inputRecordIds.flatMap((recordId) => {
+              const record = byId.get(recordId);
+              return record ? [record.productKind] : [];
+            }),
+          ),
+        })),
     };
   }
 
