@@ -35,6 +35,17 @@ export interface RiverReachMappingSummary {
   readonly candidateCount: number;
 }
 
+export interface MappedProviderMetadata {
+  readonly method:
+    | 'PROVIDER_ID'
+    | 'MANUAL'
+    | 'NAME_SPATIAL'
+    | 'NEAREST_GEOMETRY'
+    | 'MODEL_GRID_CELL';
+  readonly confidence: number;
+  readonly distanceKm: number | null;
+}
+
 export interface ProviderReachResolutionQuery {
   readonly riverReachPublicId: string;
   readonly providerConfigId: string;
@@ -71,6 +82,12 @@ interface MappingSummaryRow {
   ambiguous_count: number | string;
   candidate_count: number | string;
   best_confidence: number | string | null;
+}
+
+interface MappedProviderMetadataRow {
+  mapping_method: MappedProviderMetadata['method'];
+  confidence: number | string;
+  distance_km: number | string | null;
 }
 
 function asNumber(value: number | string): number {
@@ -235,6 +252,57 @@ export class RiverReachRepository {
           : asNumber(row.best_confidence),
       mappedProviderCount,
       candidateCount,
+    };
+  }
+
+  async findMappedProviderMetadata(query: {
+    readonly riverReachPublicId: string;
+    readonly providerConfigId: string;
+    readonly providerReachId: string;
+    readonly atUtc: string;
+  }): Promise<MappedProviderMetadata | null> {
+    if (
+      query.riverReachPublicId.trim().length === 0 ||
+      query.providerConfigId.trim().length === 0 ||
+      query.providerReachId.trim().length === 0
+    ) {
+      throw new RangeError('mapped provider identity must not be empty');
+    }
+    assertInstant(query.atUtc);
+
+    const result = await this.database().query<MappedProviderMetadataRow>(
+      `SELECT
+         m.mapping_method,
+         m.confidence,
+         m.distance_km
+       FROM river_reaches rr
+       JOIN river_reach_provider_mappings m
+         ON m.river_reach_id = rr.id
+       WHERE rr.public_id = $1
+         AND m.provider_config_id = $2::uuid
+         AND m.provider_reach_id = $3
+         AND m.mapping_state = 'MAPPED'
+         AND m.effective_from <= $4::timestamptz
+         AND (m.effective_to IS NULL OR m.effective_to >= $4::timestamptz)
+       ORDER BY m.confidence DESC, m.distance_km ASC NULLS LAST
+       LIMIT 1`,
+      [
+        query.riverReachPublicId,
+        query.providerConfigId,
+        query.providerReachId,
+        query.atUtc,
+      ],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+
+    return {
+      method: row.mapping_method,
+      confidence: asNumber(row.confidence),
+      distanceKm:
+        row.distance_km === null
+          ? null
+          : asNumber(row.distance_km),
     };
   }
 
