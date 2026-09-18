@@ -697,7 +697,23 @@ export class CalibrationRepository {
           'Rating curve calibration has not been validated.',
         );
       }
-      if (target.link_confidence === null) {
+      const activeLink = await client.query<{ confidence: number | string }>(
+        `SELECT confidence
+         FROM gauge_reach_links
+         WHERE station_id = $1::uuid
+           AND river_reach_id = $2::uuid
+           AND link_state = 'MAPPED'
+           AND effective_from <= $3::timestamptz
+           AND (effective_to IS NULL OR effective_to >= $3::timestamptz)
+         ORDER BY confidence DESC
+         LIMIT 1`,
+        [
+          target.station_id,
+          target.river_reach_id,
+          activatedAtUtc,
+        ],
+      );
+      if (!activeLink.rows[0]) {
         throw new RangeError(
           'Rating curve station is not actively mapped to the river reach.',
         );
