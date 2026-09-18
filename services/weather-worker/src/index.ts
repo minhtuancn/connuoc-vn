@@ -1,5 +1,7 @@
 export * from './contracts.js';
 export * from './fixture-provider.js';
+export * from './hydrology-fixture.js';
+export * from './hydrology-contracts.js';
 export * from './imerg-normalizer.js';
 export * from './open-meteo.js';
 export * from './open-meteo-rainfall.js';
