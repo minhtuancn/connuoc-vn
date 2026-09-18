@@ -83,7 +83,7 @@ Golden fixture lịch âm phải lưu factual mapping nhỏ, independently verif
 - loại assertion;
 - nếu là case khó, ưu tiên nhiều nguồn độc lập hoặc nguồn thiên văn/official có phương pháp rõ.
 
-## Phase 5 weather/hydrology provider policy — reviewed 2026-09-17
+## Phase 5 weather/hydrology provider policy — registry snapshot reviewed through 2026-09-18
 
 ### Open-Meteo
 
@@ -95,11 +95,22 @@ Ba deployment interpretation được tách thành ba registry record, không g�
 
 Không được dùng free hosted endpoint như fallback âm thầm cho production thương mại.
 
-### GEOGLOWS ECMWF Streamflow Service
+### GEOGLOWS ECMWF Streamflow Service / RFS v2
 
 **Registry id:** `geoglows-ecmwf-streamflow`
 
-GEOGLOWS công bố streamflow-service data theo CC BY 4.0. Adapter phải giữ attribution, model/run metadata và phân biệt rõ retrospective simulation với observation.
+Review 2026-09-18 phát hiện product-scope licence signal chưa đồng nhất giữa các tài liệu chính thức đang được Phase 5D tham chiếu: trang licence của Streamflow Service và catalog RFS v2 hiển thị licence khác nhau cho các distribution/product surfaces.
+
+Vì Phase 5D sử dụng v2 streamflow/RFS products, machine policy chuyển sang fail-closed cho production commercial use cho tới khi exact product/distribution scope được xác minh:
+
+- `licenseStatus: PRODUCT_SCOPE_CONFLICT_REVIEW_REQUIRED`;
+- `commercialUseStatus: UNKNOWN`;
+- `redistribution: UNKNOWN`;
+- `rawPayloadRetention: REFERENCE_ONLY`.
+
+Không hạ các trạng thái này thành `ALLOWED` chỉ để provider selector chọn GEOGLOWS. Fixture/parser tests vẫn được phép dùng payload tổng hợp tối thiểu do project tự tạo để kiểm tra semantics.
+
+Adapter phải giữ attribution, exact product/version, model/run/lead/member/statistic metadata và phân biệt retrospective simulation với observation.
 
 Quan trọng: GEOGLOWS trả **discharge/streamflow**, không phải mực nước trạm đã hiệu chỉnh. Không chuyển discharge thành stage/mực nước chính xác nếu chưa có gauge datum + rating curve/calibrated model được validation.
 
@@ -254,12 +265,12 @@ Phase 5 machine values:
 - Dùng golden output do chính implementation sinh ra làm independent validation.
 - Hạ `UNKNOWN` thành `ALLOWED` chỉ để provider được selector chọn.
 
-## Review references — 2026-09-17
+## Review references — through 2026-09-18
 
-Machine-readable URLs được giữ trong `data/sources/registry.json`. Review 2026-09-17 bao gồm:
+Machine-readable URLs được giữ trong `data/sources/registry.json`. Registry snapshot hiện bao gồm các review tới 2026-09-18:
 
 - Open-Meteo Terms và Pricing: phân biệt Free Hosted non-commercial, Paid Hosted commercial, data attribution và self-hosted server.
-- GEOGLOWS ECMWF Streamflow Service License/Documentation: CC BY 4.0 data, streamflow forecast/retrospective semantics.
+- GEOGLOWS Streamflow Service/RFS v2: giữ cả licence page, RFS v2 catalog và documentation làm references; product-scope licence conflict được fail-closed thay vì suy diễn commercial entitlement.
 - NASA GPM Data Usage Policy/Data Directory: mission data availability và dataset citation requirements; commercial-use vẫn fail-closed ở registry cho tới product-level review.
 - NCHMF public weather/hydrology pages: authoritative reference nhưng không suy diễn machine-use/redistribution rights khi chưa có terms/permission cụ thể.
 - NOAA CO-OPS metadata/disclaimer references cho Phase 1 tide validation.
@@ -301,3 +312,53 @@ Open-Meteo rainfall follows the Phase 5B deployment split. Free hosted access is
 ### Phase 5C explicit non-goals
 
 Rainfall APIs do not claim river stage, locally calibrated river rise, flood probability or official flood warning status. Those outputs require later calibrated/authoritative phases and their own evidence gates.
+
+
+## Phase 5D river discharge semantics
+
+Phase 5D phân biệt normalized river identity, provider reach/grid identity và discharge product semantics.
+
+### Discharge-only rule
+
+Các record Phase 5D dùng đơn vị `m3/s` và chỉ biểu diễn:
+
+- forecast mean;
+- forecast statistic/quantile;
+- forecast ensemble member;
+- retrospective simulation;
+- return-period discharge threshold.
+
+Không field nào trong public Phase 5D API được phép suy ra stage/water level từ discharge. Stage/rating-curve/calibrated river-rise thuộc #57.
+
+### Reach/provider mapping
+
+Provider association phải có state, method, confidence và effective range.
+
+- `MAPPED`: một provider mapping cụ thể được chấp nhận.
+- `AMBIGUOUS`: provider mapping có nhiều candidate cạnh tranh; runtime không được tự chọn.
+- `UNMAPPED`: không có association đủ evidence.
+
+Một normalized reach có thể map hợp lệ tới nhiều provider khác nhau; đó là multi-provider coverage, không phải ambiguity.
+
+Open-Meteo Flood/GloFAS được coi là `MODEL_GRID_CELL` association khi chỉ có returned model grid coordinate. Khoảng cách request→grid và confidence thấp phải được giữ lại.
+
+### Retrospective and return-period semantics
+
+GEOGLOWS/GloFAS retrospective là model simulation, không phải observed discharge.
+
+Return-period threshold là reference flow context. Phase 5D không chuyển một threshold 20-year/50-year thành flood probability hoặc official warning.
+
+### Hydrology LKG
+
+Cached discharge chỉ được dùng khi cùng normalized reach + capability và provider reach id vẫn có current `MAPPED` relation ở thời điểm request. Mapping hết hiệu lực làm cache không còn compatible dù stale grace theo thời gian vẫn chưa hết.
+
+### Public redaction
+
+Public river APIs không trả:
+
+- `providerConfigId`;
+- provider key;
+- secret reference;
+- endpoint configuration.
+
+Public provenance vẫn giữ source id, product/version, fetch time, attribution, provider reach/grid id và mapping confidence vì các field này cần để giải thích discharge value.
