@@ -52,6 +52,7 @@ export type CalibrationModelKind = z.infer<typeof CalibrationModelKindSchema>;
 export const CalibrationDeploymentStatusSchema = z.enum([
   'CANDIDATE',
   'ACTIVE',
+  'SUPERSEDED',
   'ROLLED_BACK',
   'REJECTED',
 ]);
