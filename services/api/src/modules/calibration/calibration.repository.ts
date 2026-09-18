@@ -469,6 +469,56 @@ export class CalibrationRepository {
     return this.findActiveCurve('station', stationPublicId, atUtc);
   }
 
+  async findLatestObservedStage(query: {
+    readonly stationPublicId: string;
+    readonly datumId: string;
+    readonly atUtc: string;
+  }): Promise<{
+    readonly observedAt: string;
+    readonly stageM: number;
+    readonly datumId: string;
+  } | null> {
+    if (
+      query.stationPublicId.trim().length === 0 ||
+      query.datumId.trim().length === 0
+    ) {
+      throw new RangeError('stage observation identity must not be empty');
+    }
+    assertInstant(query.atUtc, 'atUtc');
+
+    const result = await this.database().query<{
+      observed_at: Date | string;
+      value: number | string;
+      unit: 'm' | 'cm' | 'mm';
+      datum_id: string;
+    }>(
+      `SELECT o.observed_at, o.value, o.unit, o.datum_id
+       FROM observations o
+       JOIN stations s ON s.id = o.station_id
+       WHERE s.public_id = $1
+         AND o.datum_id = $2
+         AND o.observed_at <= $3::timestamptz
+         AND o.quality_state = 'GOOD'
+       ORDER BY o.observed_at DESC, o.id DESC
+       LIMIT 1`,
+      [query.stationPublicId, query.datumId, query.atUtc],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+    const raw = asNumber(row.value);
+    const stageM =
+      row.unit === 'm'
+        ? raw
+        : row.unit === 'cm'
+          ? raw / 100
+          : raw / 1000;
+    return {
+      observedAt: asIso(row.observed_at),
+      stageM,
+      datumId: row.datum_id,
+    };
+  }
+
   async findCalibrationMetrics(
     calibrationPublicId: string,
   ): Promise<CalibrationRunSummary | null> {
