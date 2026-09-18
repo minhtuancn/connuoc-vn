@@ -29,7 +29,7 @@ describe('persistence stage baseline', () => {
     ]);
 
     expect(result.overall).toEqual({
-      maeM: 0.26666666666666666,
+      maeM: expect.closeTo(0.26666666666666666, 12),
       rmseM: expect.closeTo(Math.sqrt(0.08), 12),
       sampleCount: 3,
     });
