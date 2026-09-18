@@ -5,6 +5,7 @@ export * from './ids.js';
 export * from './location.js';
 export * from './provider.js';
 export * from './rainfall.js';
+export * from './river-rise.js';
 export * from './source.js';
 export * from './water-level.js';
 export * from './weather.js';
