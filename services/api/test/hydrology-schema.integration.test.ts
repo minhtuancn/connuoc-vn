@@ -246,7 +246,10 @@ describe('Phase 5D hydrology schema', () => {
       );
 
     await insertRun();
+
+    await client.query('SAVEPOINT duplicate_hydrology_run');
     await expect(insertRun()).rejects.toMatchObject({ code: '23505' });
+    await client.query('ROLLBACK TO SAVEPOINT duplicate_hydrology_run');
 
     const run = await client.query<{ id: string }>(
       `SELECT id
@@ -255,6 +258,7 @@ describe('Phase 5D hydrology schema', () => {
       [providerId, 'b'.repeat(64)],
     );
 
+    await client.query('SAVEPOINT negative_hydrology_discharge');
     await expect(
       client.query(
         `INSERT INTO hydrology_discharge_points (
@@ -268,5 +272,6 @@ describe('Phase 5D hydrology schema', () => {
         [run.rows[0]!.id],
       ),
     ).rejects.toMatchObject({ code: '23514' });
+    await client.query('ROLLBACK TO SAVEPOINT negative_hydrology_discharge');
   });
 });
