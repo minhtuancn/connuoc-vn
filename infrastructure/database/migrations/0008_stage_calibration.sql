@@ -284,6 +284,7 @@ CREATE TABLE stage_forecast_points (
   CONSTRAINT stage_forecast_points_external_id_nonempty
     CHECK (length(btrim(external_discharge_record_id)) > 0),
   CONSTRAINT stage_forecast_points_lead CHECK (lead_seconds >= 0),
+  CONSTRAINT stage_forecast_points_lead CHECK (lead_seconds >= 0),
   CONSTRAINT stage_forecast_points_discharge CHECK (discharge_cms >= 0),
   CONSTRAINT stage_forecast_points_status
     CHECK (derivation_status IN ('AVAILABLE', 'OUTSIDE_CALIBRATED_DOMAIN', 'DATUM_MISMATCH')),
@@ -300,3 +301,116 @@ CREATE TABLE stage_forecast_points (
 
 CREATE INDEX stage_forecast_points_valid_idx
   ON stage_forecast_points (stage_forecast_run_id, valid_at);
+
+
+CREATE OR REPLACE FUNCTION protect_validated_calibration_run()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF OLD.validated_at IS NOT NULL AND (
+    NEW.public_id IS DISTINCT FROM OLD.public_id
+    OR NEW.version IS DISTINCT FROM OLD.version
+    OR NEW.station_id IS DISTINCT FROM OLD.station_id
+    OR NEW.river_reach_id IS DISTINCT FROM OLD.river_reach_id
+    OR NEW.datum_id IS DISTINCT FROM OLD.datum_id
+    OR NEW.model_kind IS DISTINCT FROM OLD.model_kind
+    OR NEW.model_version IS DISTINCT FROM OLD.model_version
+    OR NEW.feature_version IS DISTINCT FROM OLD.feature_version
+    OR NEW.split_strategy IS DISTINCT FROM OLD.split_strategy
+    OR NEW.train_start IS DISTINCT FROM OLD.train_start
+    OR NEW.train_end IS DISTINCT FROM OLD.train_end
+    OR NEW.validation_start IS DISTINCT FROM OLD.validation_start
+    OR NEW.validation_end IS DISTINCT FROM OLD.validation_end
+    OR NEW.test_start IS DISTINCT FROM OLD.test_start
+    OR NEW.test_end IS DISTINCT FROM OLD.test_end
+    OR NEW.validation_mae_m IS DISTINCT FROM OLD.validation_mae_m
+    OR NEW.validation_rmse_m IS DISTINCT FROM OLD.validation_rmse_m
+    OR NEW.validation_sample_count IS DISTINCT FROM OLD.validation_sample_count
+    OR NEW.test_mae_m IS DISTINCT FROM OLD.test_mae_m
+    OR NEW.test_rmse_m IS DISTINCT FROM OLD.test_rmse_m
+    OR NEW.test_sample_count IS DISTINCT FROM OLD.test_sample_count
+    OR NEW.accepted_test_rmse_m IS DISTINCT FROM OLD.accepted_test_rmse_m
+    OR NEW.source_summary IS DISTINCT FROM OLD.source_summary
+    OR NEW.artifact_checksum_sha256 IS DISTINCT FROM OLD.artifact_checksum_sha256
+    OR NEW.artifact_uri IS DISTINCT FROM OLD.artifact_uri
+  ) THEN
+    RAISE EXCEPTION 'validated calibration scientific fields are immutable';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER calibration_runs_protect_validated
+BEFORE UPDATE ON calibration_runs
+FOR EACH ROW
+EXECUTE FUNCTION protect_validated_calibration_run();
+
+CREATE OR REPLACE FUNCTION protect_non_candidate_rating_curve()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF OLD.status <> 'CANDIDATE' AND (
+    NEW.public_id IS DISTINCT FROM OLD.public_id
+    OR NEW.station_id IS DISTINCT FROM OLD.station_id
+    OR NEW.river_reach_id IS DISTINCT FROM OLD.river_reach_id
+    OR NEW.calibration_run_id IS DISTINCT FROM OLD.calibration_run_id
+    OR NEW.curve_version IS DISTINCT FROM OLD.curve_version
+    OR NEW.datum_id IS DISTINCT FROM OLD.datum_id
+    OR NEW.method IS DISTINCT FROM OLD.method
+    OR NEW.stage_unit IS DISTINCT FROM OLD.stage_unit
+    OR NEW.discharge_unit IS DISTINCT FROM OLD.discharge_unit
+    OR NEW.valid_discharge_min_cms IS DISTINCT FROM OLD.valid_discharge_min_cms
+    OR NEW.valid_discharge_max_cms IS DISTINCT FROM OLD.valid_discharge_max_cms
+    OR NEW.extrapolation_policy IS DISTINCT FROM OLD.extrapolation_policy
+    OR NEW.curve_checksum_sha256 IS DISTINCT FROM OLD.curve_checksum_sha256
+  ) THEN
+    RAISE EXCEPTION 'activated rating-curve scientific fields are immutable';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER rating_curves_protect_non_candidate
+BEFORE UPDATE ON rating_curves
+FOR EACH ROW
+EXECUTE FUNCTION protect_non_candidate_rating_curve();
+
+CREATE OR REPLACE FUNCTION protect_rating_curve_points_after_activation()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  curve_status text;
+  target_curve_id uuid;
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    target_curve_id := OLD.rating_curve_id;
+  ELSE
+    target_curve_id := NEW.rating_curve_id;
+  END IF;
+
+  SELECT status INTO curve_status
+  FROM rating_curves
+  WHERE id = target_curve_id;
+
+  IF curve_status IS NULL THEN
+    RAISE EXCEPTION 'rating curve does not exist';
+  END IF;
+
+  IF curve_status <> 'CANDIDATE' THEN
+    RAISE EXCEPTION 'rating-curve points are immutable after activation';
+  END IF;
+
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER rating_curve_points_protect_after_activation
+BEFORE INSERT OR UPDATE OR DELETE ON rating_curve_points
+FOR EACH ROW
+EXECUTE FUNCTION protect_rating_curve_points_after_activation();
