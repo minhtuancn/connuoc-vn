@@ -232,6 +232,7 @@ try {
       'normalized_checksum',
     ],
     stage_forecast_points: [
+      'lead_seconds',
       'discharge_cms',
       'derivation_status',
       'stage_m',
